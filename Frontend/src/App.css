@@ -1,0 +1,14 @@
+*{
+  color: #ececee;
+  font-family: Roboto,'Open Saas ', 'Arial', 'Helvetica', 'sans-serif' ;
+}
+body {
+  margin :0;
+  padding :0
+}
+
+.app{
+  background-color:#212121;
+  display: flex;
+
+}
