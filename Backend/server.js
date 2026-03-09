@@ -2,18 +2,23 @@ import "dotenv/config";
 import { setDefaultResultOrder, setServers } from 'node:dns/promises';
 import express from "express";
 import cors from "cors";
+import path from "path";  // ADD THIS
 import mongoose from "mongoose";
 import chatRoutes from "./routes/chat.js";
 
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;  // Render uses PORT env var
 
-// Fix Windows/Node.js DNS SRV resolution
+// Fix DNS
 setServers(['8.8.8.8', '1.1.1.1']);
 setDefaultResultOrder('ipv4first');
 
 app.use(express.json());
 app.use(cors());
+
+// ADD THIS: Serve static files from 'public' folder
+app.use(express.static(path.join(process.cwd(), 'public')));
+
 app.use("/api", chatRoutes);
 
 const connectDB = async () => {
