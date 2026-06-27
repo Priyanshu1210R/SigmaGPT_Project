@@ -6,59 +6,64 @@ const router = express.Router();
 
 // ================= SIGNUP =================
 
-// ========router.post("/signup", async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
+router.post("/signup", async (req, res) => {
 
-    if (!username || !email || !password) {
-      return res.status(400).json({
-        error: "All fields are required",
-      });
+    try {
+
+        const { username, email, password } = req.body;
+
+        if (!username || !email || !password) {
+            return res.status(400).json({
+                error: "All fields are required",
+            });
+        }
+
+        const existingUser = await User.findOne({
+            email: email.toLowerCase(),
+        });
+
+        if (existingUser) {
+            return res.status(409).json({
+                error: "Email already exists",
+            });
+        }
+
+        const user = await User.create({
+            username,
+            email: email.toLowerCase(),
+            password,
+        });
+
+        const token = jwt.sign(
+            {
+                userId: user._id,
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "7d",
+            }
+        );
+
+        return res.status(201).json({
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+            },
+        });
+
+    } catch (err) {
+
+        console.error("Signup Error");
+        console.error(err);
+
+        return res.status(500).json({
+            error: err.message,
+        });
+
     }
 
-    const existingUser = await User.findOne({
-      email: email.toLowerCase(),
-    });
-
-    if (existingUser) {
-      return res.status(409).json({
-        error: "Email already exists",
-      });
-    }
-
-    const user = await User.create({
-      username,
-      email: email.toLowerCase(),
-      password,
-    });
-
-    const token = jwt.sign(
-      {
-        userId: user._id,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    );
-
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },
-    });
-
-  } catch (err) {
-    console.error("Signup Error");
-    console.error(err);
-
-    res.status(500).json({
-      error: err.message,
-    });
-  }
 });
 
 ========= LOGIN =================
