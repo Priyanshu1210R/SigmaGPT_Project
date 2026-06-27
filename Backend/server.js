@@ -24,16 +24,20 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 app.use("/api/auth", authRoutes);
 app.use("/api", chatRoutes);
 
-const connectDB = async () => {
+const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URL);
+
     console.log("✅ Connected to MongoDB");
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
   } catch (err) {
-    console.log("❌ Failed:", err.message);
+    console.error("MongoDB Connection Error");
+    console.error(err);
+    process.exit(1);
   }
 };
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server on port ${PORT}`);
-  connectDB();
-});
+startServer();
