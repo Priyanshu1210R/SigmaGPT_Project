@@ -5,43 +5,63 @@ import User from "../models/User.js";
 const router = express.Router();
 
 // ================= SIGNUP =================
-router.post("/signup", async (req, res) => {
-  const { username, email, password } = req.body;
 
-  if (!username || !email || !password) {
-    return res.status(400).json({ error: "All fields are required" });
-  }
-
-  if (password.length < 6) {
-    return res.status(400).json({ error: "Password must be at least 6 characters" });
-  }
-
+// ========router.post("/signup", async (req, res) => {
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ error: "Email already registered" });
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        error: "All fields are required",
+      });
     }
 
-    const user = new User({ username, email, password });
-    await user.save();
+    const existingUser = await User.findOne({
+      email: email.toLowerCase(),
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        error: "Email already exists",
+      });
+    }
+
+    const user = await User.create({
+      username,
+      email: email.toLowerCase(),
+      password,
+    });
 
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      {
+        userId: user._id,
+      },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      {
+        expiresIn: "7d",
+      }
     );
 
-    return res.status(201).json({
+    res.status(201).json({
       token,
-      user: { id: user._id, username: user.username, email: user.email },
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
     });
+
   } catch (err) {
-    console.log(err);
-    return res.status(500).json({ error: "Signup failed" });
+    console.error("Signup Error");
+    console.error(err);
+
+    res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
-// ================= LOGIN =================
+========= LOGIN =================
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
