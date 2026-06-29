@@ -182,3 +182,292 @@ input:focus {
 .dropDownItem.logout:hover {
     background-color: rgba(248, 113, 113, 0.1);
 }
+
+/* ---- Navbar right section ---- */
+.navRight {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 1rem 2rem;
+}
+
+.userIconDiv {
+    margin: 0;
+}
+
+.usageBadge {
+    font-size: 0.7rem;
+    color: #8e8ea0;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+.premiumBadge {
+    font-size: 0.7rem;
+    color: #fbbf24;
+    background: rgba(251,191,36,0.1);
+    border: 1px solid rgba(251,191,36,0.25);
+    border-radius: 20px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+/* ========== MODAL STYLES ========== */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal {
+    background: #2a2a2a;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 1.8rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    color: #ececee;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+}
+
+.modalHeader h2 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modalClose {
+    background: transparent;
+    border: none;
+    color: #8e8ea0;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+    margin: 0;
+    min-width: unset;
+    width: auto;
+    height: auto;
+}
+
+.modalClose:hover { background: rgba(255,255,255,0.08); color: #ececee; }
+
+.modalSection {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.modalSection label {
+    font-size: 0.75rem;
+    color: #8e8ea0;
+    font-weight: 500;
+}
+
+.modalInput {
+    width: 100%;
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    font-size: 0.85rem !important;
+    color: #ececee !important;
+    box-shadow: none !important;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+}
+
+.modalInput:focus {
+    border-color: rgba(51,156,255,0.5) !important;
+    outline: none !important;
+}
+
+.modalDivider {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 0.2rem 0;
+}
+
+.modalSectionTitle {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #ececee;
+    margin: 0;
+}
+
+.optional {
+    font-weight: 400;
+    color: #8e8ea0;
+}
+
+.modalError {
+    font-size: 0.8rem;
+    color: #f87171;
+    background: rgba(248,113,113,0.08);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 0;
+}
+
+.modalSuccess {
+    font-size: 0.8rem;
+    color: #4ade80;
+    background: rgba(74,222,128,0.08);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 0;
+}
+
+.modalBtn {
+    width: 100%;
+    padding: 12px;
+    background: #339cff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.3rem;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.modalBtn:hover:not(:disabled) { background: #1a8cff; }
+.modalBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.modalBtnSecondary {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: #8e8ea0;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin: 0;
+    transition: background 0.15s;
+}
+
+.modalBtnSecondary:hover { background: rgba(255,255,255,0.05); color: #ececee; }
+
+/* ---- Upgrade modal ---- */
+.upgradeModal { max-width: 400px; }
+
+.planCard {
+    background: linear-gradient(135deg, rgba(51,156,255,0.1), rgba(251,191,36,0.08));
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 10px;
+    padding: 1.2rem;
+    position: relative;
+}
+
+.planBadge {
+    position: absolute;
+    top: -10px;
+    right: 16px;
+    background: #fbbf24;
+    color: #1a1a1a;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 20px;
+}
+
+.planPrice {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ececee;
+    margin-bottom: 0.8rem;
+}
+
+.planPrice span {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #8e8ea0;
+}
+
+.planFeatures {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.planFeatures li {
+    font-size: 0.82rem;
+    color: #b4b4b4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.planFeatures li .fa-check { color: #4ade80; font-size: 0.7rem; }
+
+.planNote {
+    font-size: 0.75rem;
+    color: #8e8ea0;
+    text-align: center;
+    margin: 0;
+}
+
+.upgradeBtn {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+    color: #1a1a1a !important;
+}
+
+.upgradeBtn:hover:not(:disabled) { background: linear-gradient(135deg, #f59e0b, #d97706) !important; }
+
+.premiumActive {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+.premiumActive .fa-circle-check { font-size: 2.5rem; color: #4ade80; }
+.premiumActive p { font-size: 0.9rem; color: #b4b4b4; line-height: 1.5; }
+
+/* ---- Limit modal ---- */
+.limitModal {
+    text-align: center;
+    align-items: center;
+    max-width: 360px;
+}
+
+.limitIcon {
+    font-size: 2.5rem;
+    color: #fbbf24;
+    margin-bottom: 0.3rem;
+}
+
+.limitModal h2 { font-size: 1.1rem; margin: 0; }
+.limitModal p { font-size: 0.85rem; color: #b4b4b4; line-height: 1.5; margin: 0; }
