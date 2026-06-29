@@ -59,7 +59,10 @@ app.use((req, res) => {
 });
 
 // ================= GLOBAL ERROR HANDLER =================
-
+// ✅ FIX: Express requires exactly 4 parameters for error-handling middleware.
+//    The `next` parameter must be present even if unused — otherwise Express
+//    treats it as a regular middleware and errors won't route here.
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error("Global Error:");
   console.error(err);
@@ -75,7 +78,6 @@ app.use((err, req, res, next) => {
 const connectDB = async () => {
   try {
     await mongoose.connect(MONGODB_URL);
-
     console.log("✅ Connected to MongoDB");
   } catch (err) {
     console.error("❌ MongoDB Connection Failed");
@@ -89,7 +91,6 @@ const connectDB = async () => {
 const startServer = async () => {
   try {
     await connectDB();
-
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
