@@ -9,13 +9,9 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("sigma_token"));
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Verify token on mount
   useEffect(() => {
     const verifyToken = async () => {
-      if (!token) {
-        setAuthLoading(false);
-        return;
-      }
+      if (!token) { setAuthLoading(false); return; }
       try {
         const res = await fetch(`${BACKEND}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -69,8 +65,44 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  // ---- Settings: update profile ----
+  const updateProfile = async ({ username, email, currentPassword, newPassword }) => {
+    const res = await fetch(`${BACKEND}/api/auth/update-profile`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ username, email, currentPassword, newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Update failed");
+    // Refresh token and user if email changed
+    if (data.token) {
+      localStorage.setItem("sigma_token", data.token);
+      setToken(data.token);
+    }
+    setUser(data.user);
+    return data;
+  };
+
+  // ---- Upgrade to premium ----
+  const upgradeToPremium = async () => {
+    const res = await fetch(`${BACKEND}/api/auth/upgrade`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Upgrade failed");
+    setUser(prev => ({ ...prev, isPremium: true }));
+    return data;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, authLoading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, setUser, token, authLoading, login, signup, logout, updateProfile, upgradeToPremium }}>
       {children}
     </AuthContext.Provider>
   );
