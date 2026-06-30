@@ -16,6 +16,7 @@ function App() {
   const [prevChats, setPrevChats] = useState([]);
   const [newChat, setNewChat] = useState(true);
   const [allThreads, setAllThreads] = useState([]);
+  const [image, setImage] = useState(null); // { dataUrl, name } of the image attached to the next message
 
   const providerValues = {
     prompt, setPrompt,
@@ -24,6 +25,7 @@ function App() {
     newChat, setNewChat,
     prevChats, setPrevChats,
     allThreads, setAllThreads,
+    image, setImage,
   };
 
   if (authLoading) {
