@@ -2,6 +2,7 @@ import "./Sidebar.css";
 import { useContext, useEffect } from "react";
 import { MyContext } from "./MyContext.jsx";
 import { useAuth } from "./AuthContext.jsx";
+import { useTheme } from "./ThemeContext.jsx";
 import { v1 as uuidv1 } from "uuid";
 import logo from "./assets/blacklogo.png";
 
@@ -10,6 +11,7 @@ const BACKEND = "https://sigmagpt-project-backend.onrender.com";
 function Sidebar() {
   const { allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats } = useContext(MyContext);
   const { token } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const authHeaders = {
     "Content-Type": "application/json",
@@ -87,6 +89,14 @@ function Sidebar() {
       </ul>
 
       <div className="sign">
+        <button
+          className="themeToggle"
+          onClick={toggleTheme}
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          <i className={theme === "dark" ? "fa-solid fa-moon" : "fa-solid fa-sun"}></i>
+          <span>{theme === "dark" ? "Dark mode" : "Light mode"}</span>
+        </button>
         <p>By Priyanshu Ranjan</p>
       </div>
     </section>
