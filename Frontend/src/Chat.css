@@ -23,6 +23,24 @@
     margin-left: 15rem;
     max-width: 500px;
     width: fit-content;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.userMessageText {
+    margin: 0;
+    text-align: left;
+}
+
+.chatImage {
+    max-width: 280px;
+    max-height: 280px;
+    width: 100%;
+    border-radius: 10px;
+    object-fit: cover;
+    display: block;
 }
 
 .hljs {
