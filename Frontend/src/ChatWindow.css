@@ -1,5 +1,5 @@
 .chatWindow {
-    background-color: #212121;
+    background-color: var(--bg-app);
     height: 100vh;
     width: 100%;
     display: flex;
@@ -26,7 +26,7 @@
 }
 
 .userIcon {
-    background-color: #339cff;
+    background-color: var(--accent);
     height: 25px;
     width: 25px;
     border-radius: 50%;
@@ -57,7 +57,7 @@
 input {
     width: 100%;
     border: none;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--bg-input);
     padding: 20px;
     font-size: 0.8rem;
     border-radius: 14px;
@@ -85,13 +85,13 @@ input:focus {
 }
 
 #submit i:hover {
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .info {
     font-size: 0.8rem;
     padding: 0.5rem;
-    color: #b4b4b4;
+    color: var(--text-secondary);
 }
 
 /* dropdown */
@@ -100,13 +100,13 @@ input:focus {
     top: 4rem;
     right: 4rem;
     width: 200px;
-    background-color: #323232;
+    background-color: var(--bg-tertiary);
     padding: 0.3rem 0.5rem;
     border-radius: 8px;
     text-align: left;
     z-index: 1000;
     box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color);
 }
 
 .dropDownItem {
@@ -138,7 +138,7 @@ input:focus {
 
 .dropDownItem.userInfo .fa-circle-user {
     font-size: 28px;
-    color: #339cff;
+    color: var(--accent);
     flex-shrink: 0;
     margin-top: 2px;
 }
@@ -153,7 +153,7 @@ input:focus {
 .userName {
     font-size: 13px;
     font-weight: 600;
-    color: #ececee;
+    color: var(--text-primary);
     display: block;
     white-space: nowrap;
     overflow: hidden;
@@ -162,7 +162,7 @@ input:focus {
 
 .userEmail {
     font-size: 11px;
-    color: #8e8ea0;
+    color: var(--text-muted);
     display: block;
     white-space: nowrap;
     overflow: hidden;
@@ -171,12 +171,12 @@ input:focus {
 
 .dropDownDivider {
     height: 1px;
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: var(--border-color);
     margin: 4px 0;
 }
 
 .dropDownItem.logout {
-    color: #f87171;
+    color: var(--danger);
 }
 
 .dropDownItem.logout:hover {
@@ -197,9 +197,9 @@ input:focus {
 
 .usageBadge {
     font-size: 0.7rem;
-    color: #8e8ea0;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-muted);
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 3px 10px;
     white-space: nowrap;
@@ -207,7 +207,7 @@ input:focus {
 
 .premiumBadge {
     font-size: 0.7rem;
-    color: #fbbf24;
+    color: var(--warning);
     background: rgba(251,191,36,0.1);
     border: 1px solid rgba(251,191,36,0.25);
     border-radius: 20px;
@@ -219,7 +219,7 @@ input:focus {
 .modalOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: var(--overlay-color);
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
@@ -228,14 +228,14 @@ input:focus {
 }
 
 .modal {
-    background: #2a2a2a;
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 14px;
     padding: 1.8rem;
     width: 100%;
     max-width: 420px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    color: #ececee;
+    box-shadow: 0 20px 60px var(--shadow-color);
+    color: var(--text-primary);
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
@@ -259,7 +259,7 @@ input:focus {
 .modalClose {
     background: transparent;
     border: none;
-    color: #8e8ea0;
+    color: var(--text-muted);
     font-size: 1rem;
     cursor: pointer;
     padding: 4px 8px;
@@ -271,7 +271,7 @@ input:focus {
     height: auto;
 }
 
-.modalClose:hover { background: rgba(255,255,255,0.08); color: #ececee; }
+.modalClose:hover { background: var(--bg-hover); color: var(--text-primary); }
 
 .modalSection {
     display: flex;
@@ -281,49 +281,49 @@ input:focus {
 
 .modalSection label {
     font-size: 0.75rem;
-    color: #8e8ea0;
+    color: var(--text-muted);
     font-weight: 500;
 }
 
 .modalInput {
     width: 100%;
-    background: rgba(255,255,255,0.06) !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
+    background: var(--bg-input) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 8px !important;
     padding: 10px 12px !important;
     font-size: 0.85rem !important;
-    color: #ececee !important;
+    color: var(--text-primary) !important;
     box-shadow: none !important;
     transition: border-color 0.15s;
     box-sizing: border-box;
 }
 
 .modalInput:focus {
-    border-color: rgba(51,156,255,0.5) !important;
+    border-color: var(--accent) !important;
     outline: none !important;
 }
 
 .modalDivider {
     height: 1px;
-    background: rgba(255,255,255,0.08);
+    background: var(--border-color);
     margin: 0.2rem 0;
 }
 
 .modalSectionTitle {
     font-size: 0.8rem;
     font-weight: 600;
-    color: #ececee;
+    color: var(--text-primary);
     margin: 0;
 }
 
 .optional {
     font-weight: 400;
-    color: #8e8ea0;
+    color: var(--text-muted);
 }
 
 .modalError {
     font-size: 0.8rem;
-    color: #f87171;
+    color: var(--danger);
     background: rgba(248,113,113,0.08);
     border-radius: 6px;
     padding: 8px 12px;
@@ -332,7 +332,7 @@ input:focus {
 
 .modalSuccess {
     font-size: 0.8rem;
-    color: #4ade80;
+    color: var(--success);
     background: rgba(74,222,128,0.08);
     border-radius: 6px;
     padding: 8px 12px;
@@ -342,7 +342,7 @@ input:focus {
 .modalBtn {
     width: 100%;
     padding: 12px;
-    background: #339cff;
+    background: var(--accent);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -357,15 +357,15 @@ input:focus {
     gap: 8px;
 }
 
-.modalBtn:hover:not(:disabled) { background: #1a8cff; }
+.modalBtn:hover:not(:disabled) { background: var(--accent-hover); }
 .modalBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .modalBtnSecondary {
     width: 100%;
     padding: 10px;
     background: transparent;
-    color: #8e8ea0;
-    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 0.85rem;
     cursor: pointer;
@@ -373,7 +373,7 @@ input:focus {
     transition: background 0.15s;
 }
 
-.modalBtnSecondary:hover { background: rgba(255,255,255,0.05); color: #ececee; }
+.modalBtnSecondary:hover { background: var(--bg-hover); color: var(--text-primary); }
 
 /* ---- Upgrade modal ---- */
 .upgradeModal { max-width: 400px; }
@@ -390,7 +390,7 @@ input:focus {
     position: absolute;
     top: -10px;
     right: 16px;
-    background: #fbbf24;
+    background: var(--warning);
     color: #1a1a1a;
     font-size: 0.68rem;
     font-weight: 700;
@@ -401,14 +401,14 @@ input:focus {
 .planPrice {
     font-size: 2rem;
     font-weight: 700;
-    color: #ececee;
+    color: var(--text-primary);
     margin-bottom: 0.8rem;
 }
 
 .planPrice span {
     font-size: 0.85rem;
     font-weight: 400;
-    color: #8e8ea0;
+    color: var(--text-muted);
 }
 
 .planFeatures {
@@ -422,17 +422,17 @@ input:focus {
 
 .planFeatures li {
     font-size: 0.82rem;
-    color: #b4b4b4;
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.planFeatures li .fa-check { color: #4ade80; font-size: 0.7rem; }
+.planFeatures li .fa-check { color: var(--success); font-size: 0.7rem; }
 
 .planNote {
     font-size: 0.75rem;
-    color: #8e8ea0;
+    color: var(--text-muted);
     text-align: center;
     margin: 0;
 }
@@ -453,8 +453,8 @@ input:focus {
     text-align: center;
 }
 
-.premiumActive .fa-circle-check { font-size: 2.5rem; color: #4ade80; }
-.premiumActive p { font-size: 0.9rem; color: #b4b4b4; line-height: 1.5; }
+.premiumActive .fa-circle-check { font-size: 2.5rem; color: var(--success); }
+.premiumActive p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; }
 
 /* ---- Limit modal ---- */
 .limitModal {
@@ -465,9 +465,9 @@ input:focus {
 
 .limitIcon {
     font-size: 2.5rem;
-    color: #fbbf24;
+    color: var(--warning);
     margin-bottom: 0.3rem;
 }
 
 .limitModal h2 { font-size: 1.1rem; margin: 0; }
-.limitModal p { font-size: 0.85rem; color: #b4b4b4; line-height: 1.5; margin: 0; }
+.limitModal p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0; }
