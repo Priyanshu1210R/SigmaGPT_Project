@@ -45,8 +45,9 @@ router.delete("/thread/:threadId", async (req, res) => {
 
 // ================= CHAT ROUTE =================
 router.post("/chat", async (req, res) => {
-  const { threadId, message } = req.body;
-  if (!threadId || !message) return res.status(400).json({ error: "Missing fields" });
+  const { threadId, message, image } = req.body;
+  // image (optional): full data URL string e.g. "data:image/png;base64,xxxx"
+  if (!threadId || (!message && !image)) return res.status(400).json({ error: "Missing fields" });
 
   try {
     const user = await User.findById(req.user._id);
@@ -61,20 +62,31 @@ router.post("/chat", async (req, res) => {
       });
     }
 
+    // Parse data URL into mimeType + base64 payload for Gemini
+    let imagePayload = null;
+    if (image) {
+      const match = /^data:(.+);base64,(.*)$/.exec(image);
+      if (!match) return res.status(400).json({ error: "Invalid image format" });
+      imagePayload = { mimeType: match[1], data: match[2] };
+    }
+
+    const userMessageText = message?.trim() || "";
+    const titleSource = userMessageText || "Image scan";
+
     let thread = await Thread.findOne({ threadId, userId: req.user._id });
 
     if (!thread) {
       thread = new Thread({
         threadId,
         userId: req.user._id,
-        title: message.substring(0, 50),
-        messages: [{ role: "user", content: message }],
+        title: titleSource.substring(0, 50),
+        messages: [{ role: "user", content: userMessageText, image: image || null }],
       });
     } else {
-      thread.messages.push({ role: "user", content: message });
+      thread.messages.push({ role: "user", content: userMessageText, image: image || null });
     }
 
-    const assistantReply = await getGeminiAPIResponse(message);
+    const assistantReply = await getGeminiAPIResponse(userMessageText, imagePayload);
     thread.messages.push({ role: "model", content: assistantReply });
     thread.updatedAt = new Date();
     await thread.save();
