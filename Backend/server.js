@@ -17,10 +17,10 @@ const MONGODB_URL = process.env.MONGODB_URL;
 // ================= MIDDLEWARE =================
 
 // Parse JSON
-app.use(express.json());
+app.use(express.json({ limit: "12mb" }));
 
 // Parse URL Encoded Data
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "12mb" }));
 
 // Enable CORS
 app.use(
