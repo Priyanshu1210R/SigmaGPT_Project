@@ -1,6 +1,6 @@
 .sidebar {
-    background-color: #171717;
-    color: #b4b4b4;
+    background-color: var(--bg-sidebar);
+    color: var(--text-secondary);
     height: 100vh;
     width: 320px;
     display: flex;
@@ -17,14 +17,14 @@ button {
     padding: 10px;
     border-radius: 5px;
     background-color: transparent;
-    border: solid 0.5px rgba(255, 255, 255, 0.5);
+    border: solid 0.5px var(--border-color-strong);
     cursor: pointer;
 }
 
 .logo {
     height: 25px;
     width: 25px;
-    background-color: #fff;
+    background-color: var(--white);
     border-radius: 50%;
     object-fit: cover;
 }
@@ -34,7 +34,7 @@ button span {
 }
 
 button:hover {
-    background-color: rgba(180, 180, 180, 0.05);
+    background-color: var(--bg-hover);
 }
 
 .history {
@@ -54,7 +54,7 @@ button:hover {
 }
 
 .history li:hover {
-    background-color: rgba(180, 180, 180, 0.05);
+    background-color: var(--bg-hover);
     border-radius: 10px;
 }
 
@@ -63,7 +63,7 @@ button:hover {
     margin: 10px;
     font-size: 14px;
     text-align: center;
-    border-top: solid 0.25px rgba(255, 255, 255, 0.5);
+    border-top: solid 0.25px var(--border-color-strong);
 }
 
 .fa-trash {
@@ -74,14 +74,40 @@ button:hover {
 
 .history li:hover .fa-trash {
     opacity: 1;
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .fa-trash:hover {
-    color: #f87171 !important;
+    color: var(--danger) !important;
 }
 
 .highlighted {
-    background-color: rgba(180, 180, 180, 0.05);
+    background-color: var(--bg-hover);
     border-radius: 10px;
+}
+
+.themeToggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 0 0.6rem 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background-color: var(--bg-hover);
+    border: solid 0.5px var(--border-color);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: background-color 0.15s ease;
+}
+
+.themeToggle:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.themeToggle i {
+    font-size: 13px;
+    color: var(--text-secondary);
 }
