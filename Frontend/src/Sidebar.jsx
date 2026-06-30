@@ -99,7 +99,7 @@ function Sidebar() {
           <i className={theme === "dark" ? "fa-solid fa-moon" : "fa-solid fa-sun"}></i>
           <span>{theme === "dark" ? "Dark mode" : "Light mode"}</span>
         </button>
-        <p>By Priyanshu Ranjan</p>
+        <p>Think Fast & Chat Smart</p>
       </div>
     </section>
   );
