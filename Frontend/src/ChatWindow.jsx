@@ -2,17 +2,20 @@ import "./ChatWindow.css";
 import Chat from "./Chat.jsx";
 import { MyContext } from "./MyContext.jsx";
 import { useAuth } from "./AuthContext.jsx";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 import { ScaleLoader } from "react-spinners";
 
 const BACKEND = "https://sigmagpt-project-backend.onrender.com";
 const FREE_LIMIT = 20;
 
 function ChatWindow() {
-  const { prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat } = useContext(MyContext);
+  const { prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat, image, setImage } = useContext(MyContext);
   const { token, user, setUser, logout, updateProfile, upgradeToPremium } = useAuth();
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [sentImage, setSentImage] = useState(null); // image that was actually sent with the in-flight message
+  const [imageError, setImageError] = useState("");
+  const fileInputRef = useRef(null);
 
   // ---- Modal state ----
   const [showSettings, setShowSettings] = useState(false);
@@ -45,9 +48,43 @@ function ChatWindow() {
     }
   }, [user]);
 
+  // ---- Image attach ----
+  const MAX_IMAGE_MB = 8;
+
+  const handleAttachClick = () => fileInputRef.current?.click();
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+
+    setImageError("");
+
+    if (!file.type.startsWith("image/")) {
+      setImageError("Please select an image file.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setImageError(`Image must be under ${MAX_IMAGE_MB}MB.`);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImage({ dataUrl: reader.result, name: file.name });
+    };
+    reader.onerror = () => setImageError("Could not read that image. Please try another.");
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImage(null);
+    setImageError("");
+  };
+
   // ---- Chat ----
   const getReply = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() && !image) return;
 
     // Client-side guard
     if (!user?.isPremium && (user?.usageCount ?? 0) >= FREE_LIMIT) {
@@ -57,6 +94,7 @@ function ChatWindow() {
 
     setLoading(true);
     setNewChat(false);
+    setSentImage(image);
 
     try {
       const response = await fetch(`${BACKEND}/api/chat`, {
@@ -65,7 +103,11 @@ function ChatWindow() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ message: prompt, threadId: currThreadId }),
+        body: JSON.stringify({
+          message: prompt,
+          threadId: currThreadId,
+          image: image?.dataUrl || null,
+        }),
       });
       const res = await response.json();
 
@@ -80,6 +122,7 @@ function ChatWindow() {
         setUser(prev => ({ ...prev, usageCount: res.usageCount, isPremium: res.isPremium }));
       }
 
+      setImage(null);
       setReply(res.reply);
     } catch (err) {
       console.log(err);
@@ -88,14 +131,15 @@ function ChatWindow() {
   };
 
   useEffect(() => {
-    if (prompt && reply) {
+    if ((prompt || sentImage) && reply) {
       setPrevChats(prevChats => ([
         ...prevChats,
-        { role: "user", content: prompt },
+        { role: "user", content: prompt, image: sentImage?.dataUrl || null },
         { role: "model", content: reply },
       ]));
     }
     setPrompt("");
+    setSentImage(null);
   }, [reply]);
 
   // ---- Dropdown ----
@@ -213,9 +257,43 @@ function ChatWindow() {
       <ScaleLoader color="#fff" loading={loading} />
 
       <div className="chatInput">
+        {image && (
+          <div className="imagePreviewBar">
+            <div className="imagePreviewThumb">
+              <img src={image.dataUrl} alt={image.name} />
+              <button className="imagePreviewRemove" onClick={removeImage} title="Remove image">
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <span className="imagePreviewName">{image.name}</span>
+          </div>
+        )}
+        {imageError && <p className="imageError">{imageError}</p>}
         <div className="inputBox">
           <input
-            placeholder={!isPremium && usageCount >= FREE_LIMIT ? "Upgrade to continue chatting..." : "Ask anything"}
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handleImageSelect}
+          />
+          <button
+            id="attach"
+            type="button"
+            onClick={handleAttachClick}
+            disabled={!isPremium && usageCount >= FREE_LIMIT}
+            title="Attach an image to scan"
+          >
+            <i className="fa-solid fa-paperclip"></i>
+          </button>
+          <input
+            placeholder={
+              !isPremium && usageCount >= FREE_LIMIT
+                ? "Upgrade to continue chatting..."
+                : image
+                ? "Ask something about this image, or just send to scan it"
+                : "Ask anything"
+            }
             value={prompt}
             disabled={!isPremium && usageCount >= FREE_LIMIT}
             onChange={(e) => setPrompt(e.target.value)}
