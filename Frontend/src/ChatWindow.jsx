@@ -32,6 +32,12 @@ function ChatWindow() {
   // ---- Usage limit modal ----
   const [showLimitModal, setShowLimitModal] = useState(false);
 
+  // ---- Users count modal ----
+  const [showUsers, setShowUsers] = useState(false);
+  const [usersCount, setUsersCount] = useState(null);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState("");
+
   // Prefill settings form when user is loaded
   useEffect(() => {
     if (user) {
@@ -109,6 +115,22 @@ function ChatWindow() {
     setShowUpgrade(true);
   };
 
+  const openUsers = async () => {
+    setIsOpen(false);
+    setUsersError(""); setUsersCount(null);
+    setShowUsers(true);
+    setUsersLoading(true);
+    try {
+      const response = await fetch(`${BACKEND}/api/auth/users-count`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await response.json();
+      if (!response.ok) throw new Error(res.error || "Failed to load users count");
+      setUsersCount(res.count);
+    } catch (err) {
+      setUsersError(err.message);
+    }
+    setUsersLoading(false);
+  };
+
   // ---- Settings submit ----
   const handleSettingsSubmit = async () => {
     setSettingsError(""); setSettingsSuccess("");
@@ -179,6 +201,7 @@ function ChatWindow() {
           <div className="dropDownDivider"></div>
           <div className="dropDownItem" onClick={openSettings}><i className="fa-solid fa-gear"></i> Settings</div>
           <div className="dropDownItem" onClick={openUpgrade}><i className="fa-solid fa-cloud-arrow-up"></i> Upgrade plan</div>
+          <div className="dropDownItem" onClick={openUsers}><i className="fa-solid fa-users"></i> Users</div>
           <div className="dropDownDivider"></div>
           <div className="dropDownItem logout" onClick={handleLogout}>
             <i className="fa-solid fa-arrow-right-from-bracket"></i> Log out
@@ -322,6 +345,32 @@ function ChatWindow() {
                   </button>
                 )}
               </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========== USERS COUNT MODAL ========== */}
+      {showUsers && (
+        <div className="modalOverlay" onClick={() => setShowUsers(false)}>
+          <div className="modal usersModal" onClick={e => e.stopPropagation()}>
+            <div className="modalHeader">
+              <h2><i className="fa-solid fa-users"></i> Registered Users</h2>
+              <button className="modalClose" onClick={() => setShowUsers(false)}><i className="fa-solid fa-xmark"></i></button>
+            </div>
+
+            {usersLoading && (
+              <div className="usersLoading"><i className="fa-solid fa-circle-notch fa-spin"></i></div>
+            )}
+
+            {!usersLoading && usersError && <p className="modalError">{usersError}</p>}
+
+            {!usersLoading && !usersError && usersCount !== null && (
+              <div className="usersCountBox">
+                <i className="fa-solid fa-user-group"></i>
+                <span className="usersCountNumber">{usersCount}</span>
+                <span className="usersCountLabel">{usersCount === 1 ? "user registered" : "users registered"}</span>
+              </div>
             )}
           </div>
         </div>
