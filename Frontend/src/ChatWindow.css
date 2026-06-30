@@ -456,6 +456,45 @@ input:focus {
 .premiumActive .fa-circle-check { font-size: 2.5rem; color: var(--success); }
 .premiumActive p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; }
 
+/* ---- Users modal ---- */
+.usersModal { max-width: 360px; }
+
+.usersLoading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 0;
+    font-size: 1.3rem;
+    color: var(--text-muted);
+}
+
+.usersCountBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 1.2rem 0 0.6rem 0;
+    text-align: center;
+}
+
+.usersCountBox .fa-user-group {
+    font-size: 2rem;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.usersCountNumber {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.usersCountLabel {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
 /* ---- Limit modal ---- */
 .limitModal {
     text-align: center;
