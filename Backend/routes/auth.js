@@ -134,4 +134,14 @@ router.post("/upgrade", authMiddleware, async (req, res) => {
   }
 });
 
+// ================= REGISTERED USERS COUNT =================
+router.get("/users-count", authMiddleware, async (req, res) => {
+  try {
+    const count = await User.countDocuments();
+    return res.status(200).json({ count });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
