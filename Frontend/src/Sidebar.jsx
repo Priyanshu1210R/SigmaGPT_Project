@@ -9,7 +9,7 @@ import logo from "./assets/blacklogo.png";
 const BACKEND = "https://sigmagpt-project-backend.onrender.com";
 
 function Sidebar() {
-  const { allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats } = useContext(MyContext);
+  const { allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats, setImage } = useContext(MyContext);
   const { token } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -39,10 +39,12 @@ function Sidebar() {
     setReply(null);
     setCurrThreadId(uuidv1());
     setPrevChats([]);
+    setImage(null);
   };
 
   const changeThread = async (newThreadId) => {
     setCurrThreadId(newThreadId);
+    setImage(null);
     try {
       const response = await fetch(`${BACKEND}/api/thread/${newThreadId}`, { headers: authHeaders });
       const res = await response.json();
