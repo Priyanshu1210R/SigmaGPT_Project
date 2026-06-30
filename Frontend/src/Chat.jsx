@@ -40,7 +40,10 @@ function Chat() {
                         <div className={chat.role === "user"? "userDiv" : "gptDiv"} key={idx}>
                             {
                                 chat.role === "user"? 
-                                <p className="userMessage">{chat.content}</p> : 
+                                <div className="userMessage">
+                                    {chat.image && <img src={chat.image} alt="attached" className="chatImage" />}
+                                    {chat.content && <p className="userMessageText">{chat.content}</p>}
+                                </div> : 
                                 <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{chat.content}</ReactMarkdown>
                             }
                         </div>
