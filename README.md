@@ -131,8 +131,8 @@ Free accounts are capped at **20 messages**. Once the limit is reached, the chat
 
 | | |
 |---|---|
-| ![Chat response with sliding window explanation](Images/Screenshot_2026-08-14_190948.png) | ![Account menu with settings, upgrade plan, and users](Images/Screenshot_2026-08-14_190739.png) |
-| ![Thread list with delete option, light mode](Images/Screenshot_2026-08-14_190722.png) | ![Start a new chat, dark mode](Images/Screenshot_2026-08-14_190701.png) |
+| ![Chat response with sliding window explanation](Images/Screenshot%202026-08-14%20190948.png) | ![Account menu with settings, upgrade plan, and users](Images/Screenshot%202026-08-14%20190739.png) |
+| ![Thread list with delete option, light mode](Images/Screenshot%202026-08-14%20190722.png) | ![Start a new chat, dark mode](Images/Screenshot%202026-08-14%20190701.png) |
 
 > Screenshots are stored in the `Images/` folder at the root of this repository.
 
