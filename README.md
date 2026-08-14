@@ -127,6 +127,19 @@ Authenticated requests must include an `Authorization: Bearer <token>` header.
 
 Free accounts are capped at **20 messages**. Once the limit is reached, the chat endpoint returns a `403` with a `FREE_LIMIT_REACHED` error, and the frontend prompts the user to upgrade to Premium. (Note: the upgrade flow in `auth.js` simply flips the `isPremium` flag — no real payment processing is wired in yet.)
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Chat response with sliding window explanation](Images/Screenshot_2026-08-14_190948.png) | ![Account menu with settings, upgrade plan, and users](Images/Screenshot_2026-08-14_190739.png) |
+| ![Thread list with delete option, light mode](Images/Screenshot_2026-08-14_190722.png) | ![Start a new chat, dark mode](Images/Screenshot_2026-08-14_190701.png) |
+
+> Screenshots are stored in the `Images/` folder at the root of this repository.
+
 ## License
 
 No license specified yet — add one (e.g., MIT) if you plan to share or open-source this project.
+
+## Live Demo
+
+🔗 [https://sigmagpt-project-frontend.onrender.com](https://sigmagpt-project-frontend.onrender.com)
