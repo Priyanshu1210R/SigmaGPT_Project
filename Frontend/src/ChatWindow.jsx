@@ -4,8 +4,8 @@ import { MyContext } from "./MyContext.jsx";
 import { useAuth } from "./AuthContext.jsx";
 import { useContext, useState, useEffect, useRef } from "react";
 import { ScaleLoader } from "react-spinners";
+import { BACKEND } from "./config.js";
 
-const BACKEND = "https://sigmagpt-project-backend.onrender.com";
 const FREE_LIMIT = 20;
 
 function ChatWindow() {
@@ -15,6 +15,7 @@ function ChatWindow() {
   const [isOpen, setIsOpen] = useState(false);
   const [sentImage, setSentImage] = useState(null); // image that was actually sent with the in-flight message
   const [imageError, setImageError] = useState("");
+  const [chatError, setChatError] = useState("");
   const fileInputRef = useRef(null);
 
   // ---- Modal state ----
@@ -93,6 +94,7 @@ function ChatWindow() {
     }
 
     setLoading(true);
+    setChatError("");
     setNewChat(false);
     setSentImage(image);
 
@@ -117,6 +119,14 @@ function ChatWindow() {
         return;
       }
 
+      // Rate limit / AI failure / validation error: show it and keep the draft so nothing is lost.
+      if (!response.ok) {
+        setChatError(res.message || res.error || "Something went wrong. Please try again.");
+        setSentImage(null);
+        setLoading(false);
+        return;
+      }
+
       // Update usageCount in context
       if (res.usageCount !== undefined) {
         setUser(prev => ({ ...prev, usageCount: res.usageCount, isPremium: res.isPremium }));
@@ -126,6 +136,8 @@ function ChatWindow() {
       setReply(res.reply);
     } catch (err) {
       console.log(err);
+      setChatError("Couldn't reach the server. Check your connection and try again.");
+      setSentImage(null);
     }
     setLoading(false);
   };
@@ -269,6 +281,7 @@ function ChatWindow() {
           </div>
         )}
         {imageError && <p className="imageError">{imageError}</p>}
+        {chatError && <p className="imageError">{chatError}</p>}
         <div className="inputBox">
           <input
             type="file"
