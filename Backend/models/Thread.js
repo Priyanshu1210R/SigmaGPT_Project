@@ -8,7 +8,7 @@ const MessageSchema = new mongoose.Schema({
   },
   content: {
     type: String,
-    required: true,
+    default: "", // image-only messages have no text (required:true rejected "")
   },
   image: {
     type: String, // data URL: "data:image/png;base64,...."
@@ -24,7 +24,6 @@ const ThreadSchema = new mongoose.Schema({
   threadId: {
     type: String,
     required: true,
-    unique: true,
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -45,5 +44,10 @@ const ThreadSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// threadId is only unique per user (a globally-unique index lets one user block another's IDs).
+ThreadSchema.index({ userId: 1, threadId: 1 }, { unique: true });
+// Sidebar listing: filter by user, sorted by recency.
+ThreadSchema.index({ userId: 1, updatedAt: -1 });
 
 export default mongoose.model("Thread", ThreadSchema);
