@@ -2,11 +2,12 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
+import { loginLimiter, signupLimiter } from "../middlewares/rateLimit.js";
 
 const router = express.Router();
 
 // ================= SIGNUP =================
-router.post("/signup", async (req, res) => {
+router.post("/signup", signupLimiter, async (req, res) => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password)
@@ -31,7 +32,7 @@ router.post("/signup", async (req, res) => {
 });
 
 // ================= LOGIN =================
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password)
@@ -56,21 +57,9 @@ router.post("/login", async (req, res) => {
 });
 
 // ================= GET CURRENT USER =================
-router.get("/me", async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer "))
-      return res.status(401).json({ error: "Unauthorized" });
-
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select("-password");
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    return res.status(200).json({ user });
-  } catch (err) {
-    return res.status(401).json({ error: "Invalid token" });
-  }
+router.get("/me", authMiddleware, (req, res) => {
+  // authMiddleware already loaded the user (without the password hash).
+  return res.status(200).json({ user: req.user });
 });
 
 // ================= UPDATE PROFILE (Settings) =================
@@ -115,7 +104,16 @@ router.put("/update-profile", authMiddleware, async (req, res) => {
 });
 
 // ================= UPGRADE TO PREMIUM =================
+// Anyone could POST here and grant themselves Premium for free, so this is OFF by default.
+// Enable ONLY for local demos: ENABLE_DEMO_UPGRADE=true (ignored when NODE_ENV=production).
+// Before launch, replace with a payment webhook (Razorpay/Stripe) that verifies the payment.
+const demoUpgradeEnabled = () =>
+  process.env.ENABLE_DEMO_UPGRADE === "true" && process.env.NODE_ENV !== "production";
+
 router.post("/upgrade", authMiddleware, async (req, res) => {
+  if (!demoUpgradeEnabled()) {
+    return res.status(501).json({ error: "Premium upgrades aren't available yet." });
+  }
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: "User not found" });
