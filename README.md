@@ -82,7 +82,10 @@ PORT=8080
 MONGODB_URL=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 GEMINI_API_KEY=your_gemini_api_key
+CORS_ORIGINS=http://localhost:5173,https://your-frontend-domain
 ```
+
+See `Backend/.env.example` for optional settings (model, history token budget, proxy hops).
 
 Run the backend:
 
@@ -104,7 +107,7 @@ npm run dev
 
 The app runs at `http://localhost:5173` by default (Vite's default port).
 
-> **Note:** The frontend currently points its API requests at a deployed backend URL (`https://sigmagpt-project-backend.onrender.com`) inside `Sidebar.jsx` and `ChatWindow.jsx`. For local development, update the `BACKEND` constant in those files to `http://localhost:8080`, or refactor it into a `VITE_` environment variable.
+Set `VITE_API_URL=http://localhost:8080` in `Frontend/.env` to point the frontend at a local backend (see `Frontend/.env.example`). Without it, the deployed backend URL is used.
 
 ## API Overview
 
@@ -114,7 +117,7 @@ The app runs at `http://localhost:5173` by default (Vite's default port).
 | POST | `/api/auth/login` | Log in and receive a JWT | No |
 | GET | `/api/auth/me` | Get the current user's profile | Yes |
 | PUT | `/api/auth/update-profile` | Update username/email/password | Yes |
-| POST | `/api/auth/upgrade` | Upgrade account to Premium | Yes |
+| POST | `/api/auth/upgrade` | Disabled (501) unless `ENABLE_DEMO_UPGRADE=true` outside production | Yes |
 | GET | `/api/auth/users-count` | Get total registered user count | Yes |
 | GET | `/api/thread` | List all threads for the user | Yes |
 | GET | `/api/thread/:threadId` | Get a single thread | Yes |
@@ -125,7 +128,17 @@ Authenticated requests must include an `Authorization: Bearer <token>` header.
 
 ## Usage Limits
 
-Free accounts are capped at **20 messages**. Once the limit is reached, the chat endpoint returns a `403` with a `FREE_LIMIT_REACHED` error, and the frontend prompts the user to upgrade to Premium. (Note: the upgrade flow in `auth.js` simply flips the `isPremium` flag — no real payment processing is wired in yet.)
+Free accounts are capped at **20 messages**, enforced with an atomic database update (parallel requests can't exceed it, and a failed AI call refunds the message). Once the limit is reached, the chat endpoint returns a `403` with `FREE_LIMIT_REACHED`.
+
+The `/api/auth/upgrade` endpoint used to flip `isPremium` for anyone who called it. It is now disabled by default; wire it to a real payment provider's verified webhook before enabling Premium.
+
+## Conversation Memory
+
+Each chat request sends the recent conversation history to Gemini, trimmed to a token budget (`HISTORY_TOKEN_BUDGET`, default ~24k tokens, oldest messages dropped first). Past images are not re-sent; only the image attached to the current message is.
+
+## Rate Limits
+
+Per IP: 600 requests / 15 min overall, 10 failed logins / 15 min, 5 signups / hour. Per user: 10 chat messages / minute.
 
 ## Screenshots
 
