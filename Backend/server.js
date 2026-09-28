@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 
 import chatRoutes from "./routes/chat.js";
 import authRoutes from "./routes/auth.js";
+import { apiLimiter } from "./middlewares/rateLimit.js";
 
 const app = express();
 
@@ -14,21 +15,48 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const MONGODB_URL = process.env.MONGODB_URL;
 
+// Fail fast instead of crashing on the first request.
+for (const key of ["MONGODB_URL", "JWT_SECRET", "GEMINI_API_KEY"]) {
+  if (!process.env[key]) {
+    console.error(`❌ Missing required env var: ${key}`);
+    process.exit(1);
+  }
+}
+
+// Comma-separated list of allowed frontend origins, e.g.
+// CORS_ORIGINS=https://sigmagpt-project-frontend.onrender.com,http://localhost:5173
+const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173")
+  .split(",")
+  .map((o) => o.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+
+// Behind Render/Heroku/nginx the real client IP is in X-Forwarded-For.
+// Without this, every user shares the proxy's IP and rate limits hit everyone at once.
+app.set("trust proxy", Number(process.env.TRUST_PROXY ?? 1));
+
 // ================= MIDDLEWARE =================
 
-// Parse JSON
-app.use(express.json({ limit: "12mb" }));
-
-// Parse URL Encoded Data
-app.use(express.urlencoded({ extended: true, limit: "12mb" }));
-
-// Enable CORS
+// CORS: auth uses a Bearer header (not cookies), so no credentials and no wildcard.
 app.use(
   cors({
-    origin: "*",
-    credentials: true,
+    origin(origin, cb) {
+      // No Origin header = curl / server-to-server / same-origin; browsers always send one.
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(null, false);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 600,
   })
 );
+
+// Only the chat endpoint needs a large body (base64 image). Everything else stays small.
+// This parser must be registered before the global one (first parser to run wins).
+app.use("/api/chat", express.json({ limit: "12mb" }));
+app.use(express.json({ limit: "100kb" }));
+
+// Global per-IP safety net (stricter limits live on login/signup/chat).
+app.use("/api", apiLimiter);
 
 // Serve static files
 app.use(express.static(path.join(process.cwd(), "public")));
@@ -69,7 +97,8 @@ app.use((err, req, res, next) => {
 
   res.status(err.status || 500).json({
     success: false,
-    error: err.message || "Internal Server Error",
+    // Don't leak internals on 5xx; 4xx (e.g. body too large) messages are safe.
+    error: (err.status || 500) < 500 ? err.message : "Internal Server Error",
   });
 });
 
