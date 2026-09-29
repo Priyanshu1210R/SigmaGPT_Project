@@ -1,49 +1,31 @@
 import "./Chat.css";
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext } from "react";
 import { MyContext } from "./MyContext.jsx";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
 
 function Chat() {
-    const {newChat, prevChats, reply} = useContext(MyContext);
-    const [latestReply, setLatestReply] = useState(null);
+    const { newChat, prevChats, streamingText, isStreaming } = useContext(MyContext);
 
-    useEffect(() => {
-        if(reply === null) {
-            setLatestReply(null); //prevchat load
-            return;
-        }
-
-        if(!prevChats?.length) return;
-
-        const content = reply.split(" "); //individual words
-
-        let idx = 0;
-        const interval = setInterval(() => {
-            setLatestReply(content.slice(0, idx+1).join(" "));
-
-            idx++;
-            if(idx >= content.length) clearInterval(interval);
-        }, 40);
-
-        return () => clearInterval(interval);
-
-    }, [prevChats, reply])
+    // While a reply is streaming in, prevChats doesn't have the final message yet
+    // (it's appended only once the stream finishes) — show the live text as its own bubble.
+    const finishedChats = isStreaming ? prevChats : prevChats.slice(0, -1);
+    const lastSaved = prevChats[prevChats.length - 1];
 
     return (
         <>
             {newChat && <h1>Start a New Chat!</h1>}
             <div className="chats">
                 {
-                    prevChats?.slice(0, -1).map((chat, idx) => 
-                        <div className={chat.role === "user"? "userDiv" : "gptDiv"} key={idx}>
+                    finishedChats?.map((chat, idx) =>
+                        <div className={chat.role === "user" ? "userDiv" : "gptDiv"} key={idx}>
                             {
-                                chat.role === "user"? 
+                                chat.role === "user" ?
                                 <div className="userMessage">
                                     {chat.image && <img src={chat.image} alt="attached" className="chatImage" />}
                                     {chat.content && <p className="userMessageText">{chat.content}</p>}
-                                </div> : 
+                                </div> :
                                 <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{chat.content}</ReactMarkdown>
                             }
                         </div>
@@ -51,24 +33,21 @@ function Chat() {
                 }
 
                 {
-                    prevChats.length > 0  && (
-                        <>
-                            {
-                                latestReply === null ? (
-                                    <div className="gptDiv" key={"non-typing"} >
-                                    <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{prevChats[prevChats.length-1].content}</ReactMarkdown>
-                                </div>
-                                ) : (
-                                    <div className="gptDiv" key={"typing"} >
-                                     <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{latestReply}</ReactMarkdown>
-                                </div>
-                                )
-
-                            }
-                        </>
+                    isStreaming ? (
+                        <div className="gptDiv" key="streaming">
+                            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                                {streamingText || "\u200b"}
+                            </ReactMarkdown>
+                            <span className="streamingCursor" aria-hidden="true" />
+                        </div>
+                    ) : (
+                        !isStreaming && prevChats.length > 0 && lastSaved?.role === "model" && (
+                            <div className="gptDiv" key="non-typing">
+                                <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{lastSaved.content}</ReactMarkdown>
+                            </div>
+                        )
                     )
                 }
-
             </div>
         </>
     )
