@@ -17,6 +17,8 @@ function App() {
   const [newChat, setNewChat] = useState(true);
   const [allThreads, setAllThreads] = useState([]);
   const [image, setImage] = useState(null); // { dataUrl, name } of the image attached to the next message
+  const [streamingText, setStreamingText] = useState(""); // reply text as it arrives, token by token
+  const [isStreaming, setIsStreaming] = useState(false);
 
   const providerValues = {
     prompt, setPrompt,
@@ -26,6 +28,8 @@ function App() {
     prevChats, setPrevChats,
     allThreads, setAllThreads,
     image, setImage,
+    streamingText, setStreamingText,
+    isStreaming, setIsStreaming,
   };
 
   if (authLoading) {
