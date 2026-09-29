@@ -51,10 +51,11 @@ function AuthPage() {
           <img src={logo} alt="SigmaGPT" />
           <h1>SigmaGPT</h1>
         </div>
+        <p className="tagline">Your AI study assistant — upload notes, get clear answers.</p>
 
         <h2>{isLogin ? "Welcome back" : "Create an account"}</h2>
         <p className="auth-subtitle">
-          {isLogin ? "Sign in to continue your conversations" : "Start chatting with SigmaGPT"}
+          {isLogin ? "Sign in to continue studying" : "Start studying with SigmaGPT"}
         </p>
 
         <form onSubmit={handleSubmit} className="auth-form">
