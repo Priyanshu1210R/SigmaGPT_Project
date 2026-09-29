@@ -354,7 +354,7 @@ function ChatWindow() {
                 ? "Upgrade to continue chatting..."
                 : image
                 ? "Ask something about this image, or just send to scan it"
-                : "Ask anything"
+                : "Ask about your notes, or anything you're studying"
             }
             value={prompt}
             disabled={!isPremium && usageCount >= FREE_LIMIT}
@@ -365,7 +365,7 @@ function ChatWindow() {
             <i className="fa-solid fa-paper-plane"></i>
           </div>
         </div>
-        <p className="info">SigmaGPT can make mistakes. Check important info. See Cookie Preferences.</p>
+        <p className="info">SigmaGPT is a study aid, not a substitute for your course material. Check important info.</p>
       </div>
 
       {/* ========== SETTINGS MODAL ========== */}
