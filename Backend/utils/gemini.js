@@ -1,8 +1,7 @@
 import "dotenv/config";
+import { GoogleGenAI } from "@google/genai";
 
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-const REQUEST_TIMEOUT_MS = 60_000;
 
 // Rough budget for *history* tokens sent with each request (the current message is extra).
 // Gemini has a huge context window, but every resent token costs latency and money.
@@ -48,7 +47,19 @@ export const trimHistory = (history = [], budget = HISTORY_TOKEN_BUDGET) => {
   return kept;
 };
 
-const getGeminiAPIResponse = async (message, imagePayload = null, history = []) => {
+let client;
+const getClient = () => (client ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }));
+
+/**
+ * Streams the model's reply as an async generator of text chunks (SDK, not raw fetch,
+ * so we get real server-sent tokens back from Gemini instead of one big JSON blob).
+ *
+ * @param {string} message              The new user message (may be empty if only an image is sent).
+ * @param {{mimeType: string, data: string}|null} imagePayload  Base64 image for THIS turn only.
+ * @param {Array<{role: string, content: string}>} history      Prior turns, oldest -> newest.
+ * @param {AbortSignal} [signal]         Abort to stop generation (e.g. client disconnected).
+ */
+export async function* streamGeminiResponse(message, imagePayload = null, history = [], signal) {
   const contents = trimHistory(history).map(({ role, text }) => ({
     role,
     parts: [{ text }],
@@ -62,51 +73,35 @@ const getGeminiAPIResponse = async (message, imagePayload = null, history = []) 
   parts.push({ text: message || "Describe and analyze this image." });
   contents.push({ role: "user", parts });
 
-  let response;
+  let stream;
   try {
-    response = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // Header instead of ?key= so the key never lands in URLs/logs.
-        "x-goog-api-key": process.env.GEMINI_API_KEY,
-      },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-        contents,
-      }),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    stream = await getClient().models.generateContentStream({
+      model: MODEL,
+      contents,
+      config: { systemInstruction: SYSTEM_INSTRUCTION, abortSignal: signal },
     });
   } catch (err) {
-    console.error("Gemini network error:", err.message);
+    if (signal?.aborted) return;
+    console.error("Gemini stream start error:", err?.message || err);
+    const status = err?.status === 429 ? 429 : err?.status === 400 ? 422 : 502;
     throw new GeminiError(
-      err.name === "TimeoutError" ? "The AI took too long to respond." : "Could not reach the AI service.",
-      504
+      status === 429 ? "The AI service is busy. Try again shortly." : "The AI service returned an error.",
+      status
     );
   }
 
-  if (!response.ok) {
-    console.error(`Gemini API failed: ${response.status}`);
-    throw new GeminiError(
-      response.status === 429 ? "The AI service is busy. Try again shortly." : "The AI service returned an error.",
-      response.status === 429 ? 429 : 502
-    );
+  let sawBlock = false;
+  try {
+    for await (const chunk of stream) {
+      if (chunk?.promptFeedback?.blockReason) sawBlock = true;
+      const text = chunk.text;
+      if (text) yield text;
+    }
+  } catch (err) {
+    if (signal?.aborted) return; // caller disconnected — not a real error
+    console.error("Gemini stream read error:", err?.message || err);
+    throw new GeminiError("The AI service was interrupted.", 502);
   }
 
-  const data = await response.json();
-
-  if (data?.promptFeedback?.blockReason) {
-    throw new GeminiError("That request was blocked by the AI safety filters.", 422);
-  }
-
-  // Join all text parts (thinking models can return more than one part).
-  const text = (data?.candidates?.[0]?.content?.parts || [])
-    .map((p) => p.text || "")
-    .join("")
-    .trim();
-
-  if (!text) throw new GeminiError("The AI returned an empty response.", 502);
-  return text;
-};
-
-export default getGeminiAPIResponse;
+  if (sawBlock) throw new GeminiError("That request was blocked by the AI safety filters.", 422);
+}
