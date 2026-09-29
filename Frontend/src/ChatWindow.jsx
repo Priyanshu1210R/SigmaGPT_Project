@@ -9,7 +9,7 @@ import { BACKEND } from "./config.js";
 const FREE_LIMIT = 20;
 
 function ChatWindow() {
-  const { prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat, image, setImage } = useContext(MyContext);
+  const { prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat, image, setImage, streamingText, setStreamingText, isStreaming, setIsStreaming } = useContext(MyContext);
   const { token, user, setUser, logout, updateProfile, upgradeToPremium } = useAuth();
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -111,34 +111,83 @@ function ChatWindow() {
           image: image?.dataUrl || null,
         }),
       });
-      const res = await response.json();
 
-      if (response.status === 403 && res.error === "FREE_LIMIT_REACHED") {
-        setShowLimitModal(true);
-        setLoading(false);
-        return;
-      }
-
-      // Rate limit / AI failure / validation error: show it and keep the draft so nothing is lost.
+      // Before any streaming starts, failures (validation, free-limit, rate-limit,
+      // server error) still come back as plain JSON with the right status code.
       if (!response.ok) {
-        setChatError(res.message || res.error || "Something went wrong. Please try again.");
-        setSentImage(null);
+        const res = await response.json().catch(() => ({}));
+        if (response.status === 403 && res.error === "FREE_LIMIT_REACHED") {
+          setShowLimitModal(true);
+        } else {
+          setChatError(res.message || res.error || "Something went wrong. Please try again.");
+          setSentImage(null);
+        }
         setLoading(false);
         return;
       }
 
-      // Update usageCount in context
-      if (res.usageCount !== undefined) {
-        setUser(prev => ({ ...prev, usageCount: res.usageCount, isPremium: res.isPremium }));
+      // From here on the response body is a Server-Sent Events stream of
+      // `data: {...}\n\n` lines: {type:"token"|"done"|"error", ...}.
+      setImage(null);
+      setLoading(false);
+      setIsStreaming(true);
+      setStreamingText("");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullText = "";
+      let finished = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop(); // last chunk may be incomplete; keep it for next read
+
+        for (const raw of events) {
+          const line = raw.split("\n").find(l => l.startsWith("data: "));
+          if (!line) continue;
+          const evt = JSON.parse(line.slice(6));
+
+          if (evt.type === "token") {
+            fullText += evt.text;
+            setStreamingText(fullText);
+          } else if (evt.type === "done") {
+            finished = true;
+            if (evt.usageCount !== undefined) {
+              setUser(prev => ({ ...prev, usageCount: evt.usageCount, isPremium: evt.isPremium }));
+            }
+          } else if (evt.type === "error") {
+            finished = true;
+            if (evt.usageCount !== undefined) {
+              setUser(prev => ({ ...prev, usageCount: evt.usageCount, isPremium: evt.isPremium }));
+            }
+            if (!fullText) {
+              // Nothing was generated (blocked / failed) — nothing to save, just show the error.
+              setChatError(evt.message || "Something went wrong. Please try again.");
+              setSentImage(null);
+            }
+          }
+        }
       }
 
-      setImage(null);
-      setReply(res.reply);
+      if (fullText) {
+        setReply(fullText);
+      } else if (!finished) {
+        // Connection dropped mid-stream with no error event and no text.
+        setChatError("Connection lost while generating a response. Please try again.");
+        setSentImage(null);
+      }
     } catch (err) {
       console.log(err);
       setChatError("Couldn't reach the server. Check your connection and try again.");
       setSentImage(null);
     }
+    setIsStreaming(false);
+    setStreamingText("");
     setLoading(false);
   };
 
