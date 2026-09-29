@@ -1,7 +1,7 @@
 import express from "express";
 import Thread from "../models/Thread.js";
 import User from "../models/User.js";
-import getGeminiAPIResponse, { GeminiError } from "../utils/gemini.js";
+import { streamGeminiResponse, GeminiError } from "../utils/gemini.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import { chatLimiter } from "../middlewares/rateLimit.js";
 
@@ -16,8 +16,6 @@ const ALLOWED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "i
 router.use(authMiddleware);
 
 // ================= GET ALL THREADS (sidebar) =================
-// Only the fields the sidebar needs. Previously this loaded every message
-// (including base64 images) of every thread just to read the titles.
 router.get("/thread", async (req, res) => {
   try {
     const threads = await Thread.find({ userId: req.user._id }, "threadId title updatedAt")
@@ -64,7 +62,15 @@ const parseImage = (image) => {
   return { mimeType, data };
 };
 
-// ================= CHAT ROUTE =================
+// ================= CHAT ROUTE (Server-Sent Events) =================
+// Validation, quota and history loading all happen BEFORE we touch the response, so every
+// failure up to that point is still a plain JSON error with the right status code — the
+// frontend keeps using `response.ok` / `response.json()` for those, unchanged.
+//
+// Only once we start calling Gemini do we switch to an SSE stream of JSON lines:
+//   data: {"type":"token", "text": "..."}                          - one chunk of the reply
+//   data: {"type":"done",  "usageCount": n, "isPremium": bool}      - finished + saved
+//   data: {"type":"error", "message": "...", "usageCount", "isPremium", "partial"?}
 router.post("/chat", chatLimiter, async (req, res) => {
   const { threadId, message, image } = req.body;
 
@@ -89,8 +95,8 @@ router.post("/chat", chatLimiter, async (req, res) => {
     }
   }
 
-  // Reserve one message of quota ATOMICALLY. The old read-check-then-increment let
-  // parallel requests blow past the free limit.
+  // Reserve one message of quota ATOMICALLY. A single conditional $inc means two parallel
+  // requests can no longer both slip under the limit.
   const reserved = await User.findOneAndUpdate(
     { _id: req.user._id, $or: [{ isPremium: true }, { usageCount: { $lt: FREE_LIMIT } }] },
     { $inc: { usageCount: 1 } },
@@ -106,8 +112,21 @@ router.post("/chat", chatLimiter, async (req, res) => {
     });
   }
 
+  let usageCount = reserved.usageCount;
+  const isPremium = reserved.isPremium;
+  let refunded = false;
+  const refundQuota = async () => {
+    if (refunded) return;
+    refunded = true;
+    usageCount -= 1;
+    await User.updateOne({ _id: req.user._id }, { $inc: { usageCount: -1 } }).catch((err) =>
+      console.error("Failed to refund usage:", err)
+    );
+  };
+
+  // Fetch only the last N messages, and only role+content (never old base64 images).
+  let history = [];
   try {
-    // Fetch only the last N messages, and only role+content (never old base64 images).
     const [existing] = await Thread.aggregate([
       { $match: { threadId, userId: req.user._id } },
       {
@@ -122,14 +141,62 @@ router.post("/chat", chatLimiter, async (req, res) => {
         },
       },
     ]);
+    history = existing?.recent || [];
+  } catch (err) {
+    console.error(err);
+    await refundQuota();
+    return res.status(500).json({ error: "Something went wrong" });
+  }
 
-    const assistantReply = await getGeminiAPIResponse(
-      userMessageText,
-      imagePayload,
-      existing?.recent || []
-    );
+  // ---------- switch to SSE ----------
+  res.status(200).set({
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no", // don't let nginx-style proxies buffer the stream
+  });
+  res.flushHeaders();
 
-    // One atomic upsert+push instead of load-modify-save of the whole document.
+  const send = (payload) => {
+    if (!res.writableEnded && !res.destroyed) res.write(`data: ${JSON.stringify(payload)}\n\n`);
+  };
+
+  // Stop paying Gemini for tokens nobody will read if the client disconnects mid-stream.
+  const controller = new AbortController();
+  res.on("close", () => {
+    if (!res.writableEnded) controller.abort();
+  });
+
+  let fullText = "";
+  let streamErr = null;
+  try {
+    for await (const token of streamGeminiResponse(userMessageText, imagePayload, history, controller.signal)) {
+      fullText += token;
+      send({ type: "token", text: token });
+    }
+  } catch (err) {
+    if (!controller.signal.aborted) {
+      streamErr = err instanceof GeminiError ? err : new GeminiError("Something went wrong", 500);
+    }
+  }
+
+  if (controller.signal.aborted) return res.end(); // client is gone; nothing left to send
+
+  // Nothing usable was generated -> refund, don't save an empty turn.
+  if (!fullText) {
+    await refundQuota();
+    send({
+      type: "error",
+      message: streamErr?.message || "The model returned no response. Try rephrasing.",
+      usageCount,
+      isPremium,
+    });
+    return res.end();
+  }
+
+  // Save whatever we got — including a partial reply if the stream broke mid-way,
+  // since a half-answer the user already read is more useful than losing it.
+  try {
     const now = new Date();
     await Thread.updateOne(
       { threadId, userId: req.user._id },
@@ -138,7 +205,7 @@ router.post("/chat", chatLimiter, async (req, res) => {
           messages: {
             $each: [
               { role: "user", content: userMessageText, image: image || null, timestamp: now },
-              { role: "model", content: assistantReply, timestamp: new Date() },
+              { role: "model", content: fullText, timestamp: new Date() },
             ],
           },
         },
@@ -147,22 +214,18 @@ router.post("/chat", chatLimiter, async (req, res) => {
       },
       { upsert: true }
     );
-
-    return res.json({
-      reply: assistantReply,
-      usageCount: reserved.usageCount,
-      isPremium: reserved.isPremium,
-    });
   } catch (err) {
-    // Failed call -> give the reserved message back.
-    await User.updateOne({ _id: req.user._id }, { $inc: { usageCount: -1 } }).catch(() => {});
-
-    if (err instanceof GeminiError) {
-      return res.status(err.status === 429 ? 503 : err.status).json({ error: err.message });
-    }
-    console.error(err);
-    return res.status(500).json({ error: "Something went wrong" });
+    console.error("Failed to save thread:", err);
+    send({ type: "error", message: "The reply was generated but could not be saved.", usageCount, isPremium });
+    return res.end();
   }
+
+  if (streamErr) {
+    send({ type: "error", message: "The response was interrupted. Partial reply saved.", partial: true, usageCount, isPremium });
+  } else {
+    send({ type: "done", usageCount, isPremium });
+  }
+  return res.end();
 });
 
 export default router;
