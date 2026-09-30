@@ -1,6 +1,6 @@
 import "./ChatWindow.css";
 import Chat from "./Chat.jsx";
-import Documents from "./Documents.jsx";
+import AttachMenu from "./AttachMenu.jsx";
 import { MyContext } from "./MyContext.jsx";
 import { useAuth } from "./AuthContext.jsx";
 import { useContext, useState, useEffect, useRef } from "react";
@@ -344,16 +344,10 @@ function ChatWindow() {
             style={{ display: "none" }}
             onChange={handleImageSelect}
           />
-          <button
-            id="attach"
-            type="button"
-            onClick={handleAttachClick}
-            disabled={!isPremium && usageCount >= FREE_LIMIT}
-            title="Attach an image to scan"
-          >
-            <i className="fa-solid fa-paperclip"></i>
-          </button>
-          <Documents />
+          <AttachMenu
+            onPickImage={handleAttachClick}
+            imageDisabled={!isPremium && usageCount >= FREE_LIMIT}
+          />
           <input
             placeholder={
               !isPremium && usageCount >= FREE_LIMIT
