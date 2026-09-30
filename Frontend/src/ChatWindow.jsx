@@ -1,5 +1,6 @@
 import "./ChatWindow.css";
 import Chat from "./Chat.jsx";
+import Documents from "./Documents.jsx";
 import { MyContext } from "./MyContext.jsx";
 import { useAuth } from "./AuthContext.jsx";
 import { useContext, useState, useEffect, useRef } from "react";
@@ -9,7 +10,7 @@ import { BACKEND } from "./config.js";
 const FREE_LIMIT = 20;
 
 function ChatWindow() {
-  const { prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat, image, setImage, streamingText, setStreamingText, isStreaming, setIsStreaming } = useContext(MyContext);
+  const { prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat, image, setImage, streamingText, setStreamingText, isStreaming, setIsStreaming, streamingCitations, setStreamingCitations } = useContext(MyContext);
   const { token, user, setUser, logout, updateProfile, upgradeToPremium } = useAuth();
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -132,6 +133,7 @@ function ChatWindow() {
       setLoading(false);
       setIsStreaming(true);
       setStreamingText("");
+      setStreamingCitations(null);
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -155,6 +157,8 @@ function ChatWindow() {
           if (evt.type === "token") {
             fullText += evt.text;
             setStreamingText(fullText);
+          } else if (evt.type === "citations") {
+            setStreamingCitations(evt.citations);
           } else if (evt.type === "done") {
             finished = true;
             if (evt.usageCount !== undefined) {
@@ -196,8 +200,9 @@ function ChatWindow() {
       setPrevChats(prevChats => ([
         ...prevChats,
         { role: "user", content: prompt, image: sentImage?.dataUrl || null },
-        { role: "model", content: reply },
+        { role: "model", content: reply, citations: streamingCitations || undefined },
       ]));
+      setStreamingCitations(null);
     }
     setPrompt("");
     setSentImage(null);
@@ -314,6 +319,7 @@ function ChatWindow() {
         </div>
       )}
 
+      <Documents />
       <Chat />
       <ScaleLoader color="#fff" loading={loading} />
 
