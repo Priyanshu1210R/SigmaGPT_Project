@@ -258,6 +258,12 @@ router.post("/chat", chatLimiter, async (req, res) => {
       },
       { upsert: true }
     );
+
+    // Thread may already exist (created by a document upload) with the placeholder title.
+    await Thread.updateOne(
+      { threadId, userId: req.user._id, title: "New Chat" },
+      { $set: { title: (userMessageText || "Image scan").substring(0, 50) } }
+    );
   } catch (err) {
     console.error("Failed to save thread:", err);
     send({ type: "error", message: "The reply was generated but could not be saved.", usageCount, isPremium });
