@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 
 import chatRoutes from "./routes/chat.js";
 import authRoutes from "./routes/auth.js";
+import documentRoutes from "./routes/documents.js";
 import { apiLimiter } from "./middlewares/rateLimit.js";
 
 const app = express();
@@ -76,6 +77,11 @@ app.use("/api/auth", authRoutes);
 
 // Chat Routes
 app.use("/api", chatRoutes);
+
+// Document (RAG) Routes — multer parses multipart itself, so this must NOT sit
+// behind the express.json() parsers registered above (they only handle JSON bodies
+// and simply pass multipart requests through untouched, but keep routes separate for clarity).
+app.use("/api", documentRoutes);
 
 // ================= 404 HANDLER =================
 
