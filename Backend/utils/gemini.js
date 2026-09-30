@@ -17,7 +17,10 @@ const SYSTEM_INSTRUCTION =
   "where they genuinely aid understanding; and format code, formulas, and structure with Markdown. " +
   "When the conversation includes source material (uploaded documents), ground your answers in it and " +
   "say clearly when something goes beyond what's provided, rather than guessing. When it doesn't, answer " +
-  "from general knowledge as usual, but stay in the study-assistant register: teach, don't just answer.";
+  "from general knowledge as usual, but stay in the study-assistant register: teach, don't just answer. " +
+  "When a message includes a 'Retrieved context' block, each excerpt is numbered like [1], [2]. Cite the " +
+  "excerpts you actually rely on inline using that same [n] marker right after the claim it supports — do " +
+  "not invent a citation for a claim the excerpts don't support, and don't cite an excerpt you didn't use.";
 
 export class GeminiError extends Error {
   constructor(message, status = 502) {
@@ -57,6 +60,22 @@ let client;
 const getClient = () => (client ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }));
 
 /**
+ * Builds the "Retrieved context" block injected ahead of the user's message when
+ * RAG found relevant chunks. Numbering here ([1], [2]...) is what the model is
+ * instructed (see SYSTEM_INSTRUCTION) to cite inline, and what the frontend maps
+ * back to source chunks via the `citations` array returned alongside the reply.
+ *
+ * @param {Array<{fileName: string, chunkIndex: number, text: string}>} chunks
+ */
+export function buildContextBlock(chunks) {
+  if (!chunks?.length) return "";
+  const excerpts = chunks
+    .map((c, i) => `[${i + 1}] (from "${c.fileName}", section ${c.chunkIndex + 1}):\n${c.text}`)
+    .join("\n\n");
+  return `Retrieved context from the student's uploaded documents:\n\n${excerpts}\n\n---\n\n`;
+}
+
+/**
  * Streams the model's reply as an async generator of text chunks (SDK, not raw fetch,
  * so we get real server-sent tokens back from Gemini instead of one big JSON blob).
  *
@@ -64,8 +83,9 @@ const getClient = () => (client ??= new GoogleGenAI({ apiKey: process.env.GEMINI
  * @param {{mimeType: string, data: string}|null} imagePayload  Base64 image for THIS turn only.
  * @param {Array<{role: string, content: string}>} history      Prior turns, oldest -> newest.
  * @param {AbortSignal} [signal]         Abort to stop generation (e.g. client disconnected).
+ * @param {Array<{fileName: string, chunkIndex: number, text: string}>} [retrievedChunks]  RAG context for THIS turn only.
  */
-export async function* streamGeminiResponse(message, imagePayload = null, history = [], signal) {
+export async function* streamGeminiResponse(message, imagePayload = null, history = [], signal, retrievedChunks = []) {
   const contents = trimHistory(history).map(({ role, text }) => ({
     role,
     parts: [{ text }],
@@ -75,8 +95,9 @@ export async function* streamGeminiResponse(message, imagePayload = null, histor
   if (imagePayload) {
     parts.push({ inlineData: { mimeType: imagePayload.mimeType, data: imagePayload.data } });
   }
+  const contextBlock = buildContextBlock(retrievedChunks);
   // Gemini needs some text alongside an image; default to a sensible instruction.
-  parts.push({ text: message || "Describe and analyze this image." });
+  parts.push({ text: contextBlock + (message || "Describe and analyze this image.") });
   contents.push({ role: "user", parts });
 
   let stream;
