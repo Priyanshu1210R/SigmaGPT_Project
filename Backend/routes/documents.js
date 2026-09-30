@@ -51,8 +51,19 @@ router.post("/documents/:threadId/upload", uploadLimiter, upload.single("file"),
   }
 
   // Documents attach to an existing thread (so retrieval can be scoped + access-controlled by threadId).
-  const thread = await Thread.exists({ threadId, userId: req.user._id });
-  if (!thread) return res.status(404).json({ error: "Thread not found" });
+  // The client generates threadId (uuid) for a brand-new chat, and the Thread is only persisted on the
+  // first message. Create it here if the user uploads a document before sending anything.
+  // Upsert is scoped to (userId, threadId), so it can't touch another user's thread.
+  try {
+    await Thread.updateOne(
+      { threadId, userId: req.user._id },
+      { $setOnInsert: { title: "New Chat", messages: [], createdAt: new Date(), updatedAt: new Date() } },
+      { upsert: true }
+    );
+  } catch (err) {
+    console.error("Thread upsert failed:", err);
+    return res.status(500).json({ error: "Could not prepare chat for upload" });
+  }
 
   const existingCount = await Document.countDocuments({ threadId, userId: req.user._id });
   if (existingCount >= MAX_DOCS_PER_THREAD) {
