@@ -319,7 +319,6 @@ function ChatWindow() {
         </div>
       )}
 
-      <Documents />
       <Chat />
       <ScaleLoader color="#fff" loading={loading} />
 
@@ -354,6 +353,7 @@ function ChatWindow() {
           >
             <i className="fa-solid fa-paperclip"></i>
           </button>
+          <Documents />
           <input
             placeholder={
               !isPremium && usageCount >= FREE_LIMIT
