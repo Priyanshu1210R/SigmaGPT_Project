@@ -1,37 +1,58 @@
-.docsPanel {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto 6px;
-  padding: 0 20px;
-}
-
-.docsToggle {
+/* Document button sits in the input bar, right after the image paperclip */
+.docsWrap {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  background: var(--panel-bg, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
-  color: inherit;
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  opacity: 0.85;
+  flex-shrink: 0;
+  /* intentionally not position:relative -> popover anchors to .inputBox */
 }
 
-.docsToggle:hover { opacity: 1; }
-.docsChevron { margin-left: auto; font-size: 0.75rem; }
+#attachDoc {
+  position: relative;
+  cursor: pointer;
+  height: 35px;
+  min-width: 35px;
+  padding: 0 8px;
+  margin: 0 8px 0 0;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 18px;
+  background-color: transparent;
+  border: none;
+  color: var(--text-muted);
+}
+#attachDoc:hover, #attachDoc.active {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
 
-.docsList {
-  margin-top: 6px;
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
-  border-radius: 10px;
-  padding: 8px;
+.docsBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #4ac97e;
+}
+
+.docsPopover {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  width: 100%;
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 20;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
+
+.docsPopoverTitle { font-size: 0.8rem; font-weight: 600; opacity: 0.8; padding: 0 2px 2px; }
 
 .docRow {
   display: flex;
@@ -42,9 +63,9 @@
 }
 
 .docIcon { opacity: 0.7; width: 14px; }
-.docName { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.docName { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.docStatus { font-size: 0.75rem; opacity: 0.75; white-space: nowrap; }
+.docStatus { font-size: 0.75rem; opacity: 0.85; white-space: nowrap; }
 .docStatus.processing { color: #e0a94a; }
 .docStatus.ready { color: #4ac97e; }
 .docStatus.failed { color: #e05a5a; }
@@ -65,15 +86,14 @@
   justify-content: center;
   gap: 6px;
   background: none;
-  border: 1px dashed var(--panel-border, rgba(255, 255, 255, 0.2));
+  border: 1px dashed var(--border-color);
   color: inherit;
   border-radius: 8px;
   padding: 8px;
   font-size: 0.82rem;
   cursor: pointer;
-  margin-top: 2px;
 }
-.docUploadBtn:hover { background: rgba(255, 255, 255, 0.05); }
+.docUploadBtn:hover { background: var(--bg-hover); }
 .docUploadBtn:disabled { opacity: 0.6; cursor: default; }
 
-.docsError { color: #e05a5a; font-size: 0.78rem; margin: 2px 0 0; }
+.docsError { color: #e05a5a; font-size: 0.78rem; margin: 2px 0 0; text-align: left; }
