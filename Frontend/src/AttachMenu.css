@@ -1,0 +1,126 @@
+/* Document button sits in the input bar, right after the image paperclip */
+.docsWrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  /* intentionally not position:relative -> popover anchors to .inputBox */
+}
+
+
+.attachDot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ac97e;
+}
+#attach { position: relative; }
+#attach.active { background-color: var(--bg-hover); color: var(--text-primary); }
+
+.attachMenu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  z-index: 20;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+.attachItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  color: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+.attachItem i { width: 16px; text-align: center; opacity: 0.75; }
+.attachItem:hover:not(:disabled) { background: var(--bg-hover); }
+.attachItem:disabled { opacity: 0.4; cursor: not-allowed; }
+.attachItem .docsBadge { margin-left: auto; }
+
+.docsBack { background: none; border: none; color: inherit; cursor: pointer; padding: 2px 8px 2px 2px; opacity: 0.7; }
+.docsBack:hover { opacity: 1; }
+
+.docsBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #4ac97e;
+}
+
+.docsPopover {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  width: 100%;
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.docsPopoverTitle { display: flex; align-items: center; font-size: 0.8rem; font-weight: 600; opacity: 0.8; padding: 0 2px 2px; }
+
+.docRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  padding: 4px 2px;
+}
+
+.docIcon { opacity: 0.7; width: 14px; }
+.docName { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.docStatus { font-size: 0.75rem; opacity: 0.85; white-space: nowrap; }
+.docStatus.processing { color: #e0a94a; }
+.docStatus.ready { color: #4ac97e; }
+.docStatus.failed { color: #e05a5a; }
+
+.docDelete {
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.5;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.docDelete:hover { opacity: 1; }
+
+.docUploadBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: none;
+  border: 1px dashed var(--border-color);
+  color: inherit;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.docUploadBtn:hover { background: var(--bg-hover); }
+.docUploadBtn:disabled { opacity: 0.6; cursor: default; }
+
+.docsError { color: #e05a5a; font-size: 0.78rem; margin: 2px 0 0; text-align: left; }
