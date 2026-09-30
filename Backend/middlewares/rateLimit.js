@@ -40,3 +40,14 @@ export const chatLimiter = rateLimit({
   legacyHeaders: false,
   handler: json429("You're sending messages too fast. Wait a moment and try again."),
 });
+
+// Uploads cost embedding-API calls per chunk — cap them per user.
+export const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  keyGenerator: (req) => String(req.user._id),
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  handler: json429("Too many document uploads this hour. Try again later."),
+});
+
