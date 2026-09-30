@@ -19,6 +19,8 @@ function App() {
   const [image, setImage] = useState(null); // { dataUrl, name } of the image attached to the next message
   const [streamingText, setStreamingText] = useState(""); // reply text as it arrives, token by token
   const [isStreaming, setIsStreaming] = useState(false);
+  const [documents, setDocuments] = useState([]); // uploaded knowledge docs for the current thread (RAG)
+  const [streamingCitations, setStreamingCitations] = useState(null); // sources for the in-flight reply, if any
 
   const providerValues = {
     prompt, setPrompt,
@@ -30,6 +32,8 @@ function App() {
     image, setImage,
     streamingText, setStreamingText,
     isStreaming, setIsStreaming,
+    documents, setDocuments,
+    streamingCitations, setStreamingCitations,
   };
 
   if (authLoading) {
