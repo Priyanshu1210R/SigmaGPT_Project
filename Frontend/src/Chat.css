@@ -66,3 +66,35 @@ pre {
 @keyframes blink {
     50% { opacity: 0; }
 }
+
+/* RAG citations */
+.sourcesBlock {
+    margin-top: 8px;
+    font-size: 0.8rem;
+}
+
+.sourcesToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: inherit;
+    border-radius: 999px;
+    padding: 4px 10px;
+    cursor: pointer;
+    opacity: 0.85;
+}
+.sourcesToggle:hover { opacity: 1; }
+
+.sourcesList {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sourcesList li { display: flex; flex-direction: column; gap: 2px; }
+.sourceFile { font-weight: 600; opacity: 0.9; }
+.sourceSnippet { opacity: 0.7; font-size: 0.78rem; }
