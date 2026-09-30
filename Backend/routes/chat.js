@@ -1,12 +1,16 @@
 import express from "express";
 import Thread from "../models/Thread.js";
+import Document from "../models/Document.js";
 import User from "../models/User.js";
 import { streamGeminiResponse, GeminiError } from "../utils/gemini.js";
+import { embedQuery } from "../utils/embeddings.js";
+import { retrieveRelevantChunks } from "../utils/retrieval.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import { chatLimiter } from "../middlewares/rateLimit.js";
 
 const router = express.Router();
 const FREE_LIMIT = 20;
+const RAG_TOP_K = 5;
 
 const MAX_MESSAGE_CHARS = 8000;
 const MAX_IMAGE_BYTES = 7 * 1024 * 1024; // decoded size
@@ -148,6 +152,27 @@ router.post("/chat", chatLimiter, async (req, res) => {
     return res.status(500).json({ error: "Something went wrong" });
   }
 
+  // ---------- RAG: retrieve relevant chunks from any documents attached to this thread ----------
+  // Skipped entirely (no embedding-API cost) if the thread has no successfully-indexed documents.
+  let retrievedChunks = [];
+  const hasDocs = await Document.exists({ threadId, userId: req.user._id, status: "ready" });
+  if (hasDocs && userMessageText) {
+    try {
+      const queryEmbedding = await embedQuery(userMessageText);
+      retrievedChunks = await retrieveRelevantChunks({
+        threadId,
+        userId: req.user._id,
+        queryEmbedding,
+        topK: RAG_TOP_K,
+      });
+    } catch (err) {
+      // Retrieval failing shouldn't block the chat entirely — fall back to answering
+      // without document context rather than erroring the whole request.
+      console.error("RAG retrieval failed, continuing without it:", err?.message || err);
+      retrievedChunks = [];
+    }
+  }
+
   // ---------- switch to SSE ----------
   res.status(200).set({
     "Content-Type": "text/event-stream; charset=utf-8",
@@ -161,6 +186,20 @@ router.post("/chat", chatLimiter, async (req, res) => {
     if (!res.writableEnded && !res.destroyed) res.write(`data: ${JSON.stringify(payload)}\n\n`);
   };
 
+  // Sent once, before the token stream: lets the frontend render a "Sources" list right away,
+  // which the model's inline [1] [2] markers (see SYSTEM_INSTRUCTION) point back into.
+  if (retrievedChunks.length) {
+    send({
+      type: "citations",
+      citations: retrievedChunks.map(({ documentId, fileName, chunkIndex, text }) => ({
+        documentId,
+        fileName,
+        chunkIndex,
+        text,
+      })),
+    });
+  }
+
   // Stop paying Gemini for tokens nobody will read if the client disconnects mid-stream.
   const controller = new AbortController();
   res.on("close", () => {
@@ -170,7 +209,7 @@ router.post("/chat", chatLimiter, async (req, res) => {
   let fullText = "";
   let streamErr = null;
   try {
-    for await (const token of streamGeminiResponse(userMessageText, imagePayload, history, controller.signal)) {
+    for await (const token of streamGeminiResponse(userMessageText, imagePayload, history, controller.signal, retrievedChunks)) {
       fullText += token;
       send({ type: "token", text: token });
     }
@@ -205,7 +244,12 @@ router.post("/chat", chatLimiter, async (req, res) => {
           messages: {
             $each: [
               { role: "user", content: userMessageText, image: image || null, timestamp: now },
-              { role: "model", content: fullText, timestamp: new Date() },
+              {
+                role: "model",
+                content: fullText,
+                timestamp: new Date(),
+                citations: retrievedChunks.length ? retrievedChunks : undefined,
+              },
             ],
           },
         },
