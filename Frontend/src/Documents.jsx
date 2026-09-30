@@ -17,6 +17,7 @@ function Documents() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const wrapRef = useRef(null);
 
   const authHeader = { Authorization: `Bearer ${token}` };
 
@@ -34,6 +35,16 @@ function Documents() {
     fetchDocuments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currThreadId]);
+
+  // Close the popover when clicking outside it.
+  useEffect(() => {
+    if (!expanded) return;
+    const onDown = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setExpanded(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [expanded]);
 
   const handlePick = () => fileInputRef.current?.click();
 
@@ -87,29 +98,36 @@ function Documents() {
   const readyCount = documents.filter((d) => d.status === "ready").length;
 
   return (
-    <div className="docsPanel">
+    <div className="docsWrap" ref={wrapRef}>
       <input type="file" accept={ACCEPTED} ref={fileInputRef} style={{ display: "none" }} onChange={handleFileSelect} />
 
-      <button className="docsToggle" onClick={() => setExpanded((v) => !v)} type="button">
+      <button
+        id="attachDoc"
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        title="Add notes / documents for this chat"
+        className={expanded ? "active" : ""}
+      >
         <i className="fa-solid fa-book"></i>
-        <span>
-          {documents.length === 0
-            ? "Add notes for this chat"
-            : `${readyCount}/${documents.length} document${documents.length === 1 ? "" : "s"} ready`}
-        </span>
-        <i className={`fa-solid fa-chevron-${expanded ? "up" : "down"} docsChevron`}></i>
+        {documents.length > 0 && <span className="docsBadge">{readyCount}/{documents.length}</span>}
       </button>
 
       {expanded && (
-        <div className="docsList">
+        <div className="docsPopover">
+          <div className="docsPopoverTitle">
+            {documents.length === 0
+              ? "Add notes for this chat"
+              : `${readyCount}/${documents.length} document${documents.length === 1 ? "" : "s"} ready`}
+          </div>
+
           {documents.map((doc) => (
             <div className="docRow" key={doc._id}>
-              <i className={`fa-solid ${doc.mimeType === "application/pdf" ? "fa-file-pdf" : "fa-file-lines"} docIcon`}></i>
+              <i className={`fa-solid ${doc.mimeType === "application/pdf" || /\.pdf$/i.test(doc.fileName || "") ? "fa-file-pdf" : "fa-file-lines"} docIcon`}></i>
               <span className="docName" title={doc.fileName}>{doc.fileName}</span>
               {doc.status === "processing" && <span className="docStatus processing"><i className="fa-solid fa-circle-notch fa-spin"></i> Indexing…</span>}
               {doc.status === "ready" && <span className="docStatus ready">{doc.chunkCount} chunks</span>}
               {doc.status === "failed" && <span className="docStatus failed" title={doc.error}>Failed</span>}
-              <button className="docDelete" onClick={() => handleDelete(doc._id)} title="Remove">
+              <button className="docDelete" onClick={() => handleDelete(doc._id)} title="Remove" type="button">
                 <i className="fa-solid fa-xmark"></i>
               </button>
             </div>
