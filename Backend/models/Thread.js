@@ -14,6 +14,20 @@ const MessageSchema = new mongoose.Schema({
     type: String, // data URL: "data:image/png;base64,...."
     default: null,
   },
+  // Present on model replies that used RAG — which retrieved chunks the answer is grounded in,
+  // so citations survive a reload instead of only existing for the live SSE stream.
+  citations: {
+    type: [
+      {
+        _id: false,
+        documentId: { type: mongoose.Schema.Types.ObjectId, ref: "Document" },
+        fileName: String,
+        chunkIndex: Number,
+        text: String,
+      },
+    ],
+    default: undefined,
+  },
   timestamp: {
     type: Date,
     default: Date.now,
