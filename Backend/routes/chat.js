@@ -165,6 +165,7 @@ router.post("/chat", chatLimiter, async (req, res) => {
         queryEmbedding,
         topK: RAG_TOP_K,
       });
+      console.log(`[rag] thread ${threadId}: retrieved ${retrievedChunks.length} chunk(s)`);
     } catch (err) {
       // Retrieval failing shouldn't block the chat entirely — fall back to answering
       // without document context rather than erroring the whole request.
