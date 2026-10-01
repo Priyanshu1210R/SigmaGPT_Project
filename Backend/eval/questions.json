@@ -1,0 +1,310 @@
+{
+  "_comment": "Gold labels for eval/test-document.md. 'evidence' = verbatim span(s) that must appear in a retrieved chunk for it to count as the right chunk (survives re-chunking). 'keyFacts' = strings (or arrays of accepted alternatives) the answer must contain; omit for yes/no and abstention questions, which are judged by the LLM grader. category: factual | numeric | paraphrase | distractor | multi-chunk | negative | unanswerable.",
+  "questions": [
+    {
+      "id": "F01",
+      "category": "factual",
+      "question": "Which custom exception does the lab library define, and is it checked or unchecked?",
+      "expected": "LabException, which is unchecked.",
+      "evidence": [
+        "The lab library defines one custom exception, LabException, and it is unchecked."
+      ],
+      "keyFacts": [
+        [
+          "labexception"
+        ],
+        [
+          "unchecked"
+        ]
+      ]
+    },
+    {
+      "id": "F02",
+      "category": "factual",
+      "question": "How is the standard library's PriorityQueue implemented, and what do offer and poll cost?",
+      "expected": "It is a binary min-heap; offer and poll take O(log n) time.",
+      "evidence": [
+        "A PriorityQueue in the standard library is a binary min-heap, so offer and poll take O(log n) time while peek takes O(1)."
+      ],
+      "keyFacts": [
+        [
+          "min-heap",
+          "min heap"
+        ],
+        [
+          "log n"
+        ]
+      ]
+    },
+    {
+      "id": "F03",
+      "category": "factual",
+      "question": "Which algorithm does the course use for shortest paths in graphs with negative edge weights?",
+      "expected": "Bellman-Ford.",
+      "evidence": [
+        "so the course uses Bellman-Ford for those graphs"
+      ],
+      "keyFacts": [
+        [
+          "bellman-ford",
+          "bellman ford"
+        ]
+      ]
+    },
+    {
+      "id": "N01",
+      "category": "numeric",
+      "question": "What stack-size flag do the lab scripts pass to the JVM, and how big is each thread's stack?",
+      "expected": "The flag is -Xss512k, giving each thread a 512 KB stack.",
+      "evidence": [
+        "The lab scripts start every program with the flag -Xss512k, which gives each thread a stack of 512 KB."
+      ],
+      "keyFacts": [
+        [
+          "-xss512k",
+          "512k",
+          "512 kb"
+        ]
+      ]
+    },
+    {
+      "id": "N02",
+      "category": "numeric",
+      "question": "How many buckets does LabHashMap start with, and at what load factor does it resize?",
+      "expected": "It starts with 32 buckets and doubles when the load factor passes 0.6.",
+      "evidence": [
+        "The lab's LabHashMap uses separate chaining and starts with 32 buckets. It resizes by doubling the bucket array when the load factor passes 0.6"
+      ],
+      "keyFacts": [
+        [
+          "32"
+        ],
+        [
+          "0.6"
+        ]
+      ]
+    },
+    {
+      "id": "N03",
+      "category": "numeric",
+      "question": "Below what sub-array size does the lab's merge sort switch to insertion sort?",
+      "expected": "When a sub-array has fewer than 16 elements.",
+      "evidence": [
+        "The lab's own merge sort switches to insertion sort when a sub-array has fewer than 16 elements."
+      ],
+      "keyFacts": [
+        [
+          "16"
+        ]
+      ]
+    },
+    {
+      "id": "N04",
+      "category": "numeric",
+      "question": "How many threads are in the fixed thread pool used by the lab assignments?",
+      "expected": "Exactly 4 threads.",
+      "evidence": [
+        "The lab assignments use a fixed thread pool of exactly 4 threads"
+      ],
+      "keyFacts": [
+        [
+          "4",
+          "four"
+        ]
+      ]
+    },
+    {
+      "id": "P01",
+      "category": "paraphrase",
+      "question": "How do I find the descendants of an entry in the student-written priority structure's backing storage?",
+      "expected": "The left child is at index 2i and the right child at 2i + 1 (the array starts at index 1).",
+      "evidence": [
+        "the left child is at 2i, the right child at 2i + 1, and the parent at i / 2"
+      ],
+      "keyFacts": [
+        [
+          "2i"
+        ],
+        [
+          "2i + 1"
+        ]
+      ]
+    },
+    {
+      "id": "P02",
+      "category": "paraphrase",
+      "question": "Why shouldn't the average of the lower and upper bounds be computed by adding them first?",
+      "expected": "Because adding two large ints can overflow.",
+      "evidence": [
+        "because the sum of two large ints can overflow"
+      ],
+      "keyFacts": [
+        [
+          "overflow"
+        ]
+      ]
+    },
+    {
+      "id": "P03",
+      "category": "paraphrase",
+      "question": "How deep can recursion go in student programs before it has to be turned into iteration?",
+      "expected": "More than 10,000 calls deep must be rewritten as a loop, or the grader reports a StackOverflowError.",
+      "evidence": [
+        "a recursive method that goes deeper than 10,000 calls must be rewritten as a loop, or the grader will report a StackOverflowError"
+      ],
+      "keyFacts": [
+        [
+          "10,000",
+          "10000",
+          "ten thousand"
+        ],
+        [
+          "loop",
+          "iteration",
+          "iterative"
+        ]
+      ]
+    },
+    {
+      "id": "P04",
+      "category": "paraphrase",
+      "question": "What stops sorted insertions from turning the lab's search tree into a chain?",
+      "expected": "LabAvl keeps every node's balance factor between -1 and 1, fixing violations with rotations.",
+      "evidence": [
+        "The lab's LabAvl tree prevents this by keeping the balance factor of every node between -1 and 1"
+      ],
+      "keyFacts": [
+        [
+          "labavl",
+          "avl"
+        ],
+        [
+          "balance factor"
+        ]
+      ]
+    },
+    {
+      "id": "P05",
+      "category": "paraphrase",
+      "question": "Why is the shortest-route method built on a min-priority structure unreliable when links have negative costs?",
+      "expected": "It gives wrong answers when an edge has a negative weight.",
+      "evidence": [
+        "it gives wrong answers when an edge has a negative weight"
+      ],
+      "keyFacts": [
+        [
+          "wrong",
+          "incorrect"
+        ],
+        [
+          "negative"
+        ]
+      ]
+    },
+    {
+      "id": "D01",
+      "category": "distractor",
+      "question": "By what factor does LabList grow its array when it fills up?",
+      "expected": "It doubles the array each time (the older 1.5x value is obsolete).",
+      "evidence": [
+        "it starts with an initial capacity of 8 and doubles its array each time it fills"
+      ],
+      "keyFacts": [
+        [
+          "doubles",
+          "double",
+          "twice",
+          "2x"
+        ]
+      ]
+    },
+    {
+      "id": "D02",
+      "category": "distractor",
+      "question": "How many threads did the lab thread pool have in handbook version 2.4?",
+      "expected": "8 threads.",
+      "evidence": [
+        "and the thread pool had 8 threads"
+      ],
+      "keyFacts": [
+        [
+          "8",
+          "eight"
+        ]
+      ]
+    },
+    {
+      "id": "M01",
+      "category": "multi-chunk",
+      "question": "What stack-size flag do lab programs use now, and what did handbook version 2.4 use?",
+      "expected": "Now -Xss512k; version 2.4 used -Xss1m.",
+      "evidence": [
+        "The lab scripts start every program with the flag -Xss512k",
+        "programs ran with -Xss1m"
+      ],
+      "keyFacts": [
+        [
+          "-xss512k",
+          "512k"
+        ],
+        [
+          "-xss1m",
+          "1m"
+        ]
+      ]
+    },
+    {
+      "id": "M02",
+      "category": "multi-chunk",
+      "question": "How many marks are lost for the overflow-prone midpoint, and how many for overriding equals without hashCode?",
+      "expected": "3 marks for the overflow-prone midpoint and 5 marks for equals without hashCode.",
+      "evidence": [
+        "Students lose 3 marks if they use the overflow-prone form.",
+        "it costs 5 marks on every assignment where it appears"
+      ],
+      "keyFacts": [
+        [
+          "3"
+        ],
+        [
+          "5"
+        ]
+      ]
+    },
+    {
+      "id": "G01",
+      "category": "negative",
+      "question": "Can students use the old java.util.Stack class in lab code?",
+      "expected": "No. It is banned because it is synchronized and slow; use ArrayDeque instead.",
+      "evidence": [
+        "the old Stack class is banned because it is synchronized and slow"
+      ],
+      "keyFacts": [
+        [
+          "banned",
+          "not allowed",
+          "cannot",
+          "no"
+        ]
+      ]
+    },
+    {
+      "id": "U01",
+      "category": "unanswerable",
+      "question": "Which garbage collector do the lab scripts select?",
+      "expected": "The handbook does not say. A correct answer states that the provided material does not contain this information and does not invent one."
+    },
+    {
+      "id": "U02",
+      "category": "unanswerable",
+      "question": "How many marks is the CS-210 final project worth?",
+      "expected": "The handbook does not say. A correct answer states that the provided material does not contain this information and does not invent one."
+    },
+    {
+      "id": "U03",
+      "category": "unanswerable",
+      "question": "Which IDE does the course require students to use?",
+      "expected": "The handbook does not say. A correct answer states that the provided material does not contain this information and does not invent one."
+    }
+  ]
+}
