@@ -18,6 +18,20 @@ export function cosineSimilarity(a, b) {
 }
 
 /**
+ * Rank chunks (each with an `embedding`) by cosine similarity to the query and return the
+ * top K with `score` attached and the raw vector stripped. Pure function: shared by the
+ * local fallback below and by the RAG evaluation harness (eval/), so the eval scores the
+ * exact ranking code the app runs.
+ */
+export function rankByCosine(chunks, queryEmbedding, topK) {
+  return chunks
+    .map((c) => ({ ...c, score: cosineSimilarity(queryEmbedding, c.embedding) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK)
+    .map(({ embedding, ...rest }) => rest);
+}
+
+/**
  * Local, in-process fallback for when Atlas Vector Search isn't available
  * (e.g. local MongoDB in dev, or the index hasn't been created yet). Pulls every
  * chunk for the thread and ranks it in JS. Fine up to a few thousand chunks;
@@ -29,11 +43,7 @@ async function localCosineSearch({ threadId, userId, queryEmbedding, topK }) {
     "documentId fileName chunkIndex text embedding"
   ).lean();
 
-  return chunks
-    .map((c) => ({ ...c, score: cosineSimilarity(queryEmbedding, c.embedding) }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, topK)
-    .map(({ embedding, ...rest }) => rest);
+  return rankByCosine(chunks, queryEmbedding, topK);
 }
 
 /**
