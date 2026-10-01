@@ -1,8 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { BACKEND } from "./config.js";
 
 const AuthContext = createContext();
-
-const BACKEND = "https://sigmagpt-project-backend.onrender.com";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
