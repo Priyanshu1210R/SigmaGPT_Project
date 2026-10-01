@@ -27,3 +27,18 @@ test("ranks a closer vector above a farther one", () => {
   const far = [-1, -1, 0];
   assert.ok(cosineSimilarity(query, close) > cosineSimilarity(query, far));
 });
+
+test("rankByCosine returns topK best chunks, best first, without raw embeddings", async () => {
+  const { rankByCosine } = await import("../utils/retrieval.js");
+  const out = rankByCosine(
+    [
+      { chunkIndex: 0, embedding: [0, 1] },
+      { chunkIndex: 1, embedding: [1, 0] },
+      { chunkIndex: 2, embedding: [0.9, 0.1] },
+    ],
+    [1, 0],
+    2
+  );
+  assert.deepEqual(out.map((c) => c.chunkIndex), [1, 2]);
+  assert.ok(!("embedding" in out[0]));
+});
