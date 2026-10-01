@@ -42,3 +42,24 @@ test("rankByCosine returns topK best chunks, best first, without raw embeddings"
   assert.deepEqual(out.map((c) => c.chunkIndex), [1, 2]);
   assert.ok(!("embedding" in out[0]));
 });
+
+test("retrieveRelevantChunks falls back to local search when $vectorSearch returns zero rows", async () => {
+  const { default: DocumentChunk } = await import("../models/DocumentChunk.js");
+  const { retrieveRelevantChunks } = await import("../utils/retrieval.js");
+  const origAggregate = DocumentChunk.aggregate;
+  const origFind = DocumentChunk.find;
+  try {
+    DocumentChunk.aggregate = async () => []; // Atlas: index missing/building -> empty, no error
+    DocumentChunk.find = () => ({
+      lean: async () => [
+        { chunkIndex: 0, text: "far", embedding: [0, 1] },
+        { chunkIndex: 1, text: "near", embedding: [1, 0] },
+      ],
+    });
+    const out = await retrieveRelevantChunks({ threadId: "t", userId: "507f1f77bcf86cd799439011", queryEmbedding: [1, 0], topK: 5 });
+    assert.deepEqual(out.map((c) => c.text), ["near", "far"]);
+  } finally {
+    DocumentChunk.aggregate = origAggregate;
+    DocumentChunk.find = origFind;
+  }
+});
