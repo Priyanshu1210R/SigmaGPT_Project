@@ -16,8 +16,9 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.0.2",
     "multer": "^2.4.0",
-    "nodemon": "^3.1.11",
-    "openai": "^6.15.0",
     "pdfjs-dist": "^4.10.38"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
   }
 }
