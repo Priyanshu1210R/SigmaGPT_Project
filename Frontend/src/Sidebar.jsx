@@ -5,8 +5,7 @@ import { useAuth } from "./AuthContext.jsx";
 import { useTheme } from "./ThemeContext.jsx";
 import { v1 as uuidv1 } from "uuid";
 import logo from "./assets/blacklogo.png";
-
-const BACKEND = "https://sigmagpt-project-backend.onrender.com";
+import { BACKEND } from "./config.js";
 
 function Sidebar() {
   const { allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats, setImage } = useContext(MyContext);
