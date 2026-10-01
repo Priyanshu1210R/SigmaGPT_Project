@@ -84,6 +84,14 @@ export async function retrieveRelevantChunks({ threadId, userId, queryEmbedding,
         },
       },
     ]);
+    // Atlas does NOT throw when the index is missing, misspelled or still building — it just
+    // returns zero rows. Treat "nothing found" like "unavailable" and use the local scan, which
+    // returns [] cheaply if the thread truly has no chunks. Without this, a thread that has a
+    // ready document gets answered as if no document existed.
+    if (results.length === 0) {
+      console.warn("[retrieval] $vectorSearch returned 0 rows, trying local fallback (is the Atlas index built?)");
+      return localCosineSearch({ threadId, userId, queryEmbedding, topK });
+    }
     return results;
   } catch (err) {
     // $vectorSearch fails outright (not Atlas / no index yet) rather than returning
