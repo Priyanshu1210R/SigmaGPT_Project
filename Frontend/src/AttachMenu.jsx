@@ -37,6 +37,29 @@ function AttachMenu({ onPickImage, imageDisabled = false }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currThreadId]);
 
+  // Uploads are indexed in the background (server returns 202 right away), so keep polling while
+  // anything is queued/processing. One list request covers every pending document; the interval backs
+  // off (1.5s -> 6s) to stay well inside the API's per-IP rate limit, and pauses while the tab is hidden.
+  const hasPending = documents.some((d) => d.status === "queued" || d.status === "processing");
+  useEffect(() => {
+    if (!hasPending) return;
+    let cancelled = false;
+    let timer;
+    let delay = 1500;
+    const poll = async () => {
+      if (cancelled) return;
+      if (!document.hidden) await fetchDocuments();
+      delay = Math.min(Math.round(delay * 1.3), 6000);
+      if (!cancelled) timer = setTimeout(poll, delay);
+    };
+    timer = setTimeout(poll, delay);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasPending, currThreadId, token]);
+
   // Close the popover when clicking outside it.
   useEffect(() => {
     if (mode === "closed") return;
@@ -71,10 +94,19 @@ function AttachMenu({ onPickImage, imageDisabled = false }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error || "Upload failed. Please try again.");
+        setError(data.message || data.error || "Upload failed. Please try again.");
       } else {
+        // 202 Accepted: the file is queued; the polling effect above tracks it to "ready"/"failed".
         setDocuments((prev) => [
-          { _id: data.id, fileName: data.fileName, status: data.status, chunkCount: data.chunkCount, createdAt: new Date().toISOString() },
+          {
+            _id: data.id,
+            fileName: data.fileName,
+            status: data.status,
+            stage: data.stage,
+            progress: data.progress,
+            chunkCount: 0,
+            createdAt: new Date().toISOString(),
+          },
           ...prev,
         ]);
         setMode("docs");
@@ -149,7 +181,13 @@ function AttachMenu({ onPickImage, imageDisabled = false }) {
             <div className="docRow" key={doc._id}>
               <i className={`fa-solid ${doc.mimeType === "application/pdf" || /\.pdf$/i.test(doc.fileName || "") ? "fa-file-pdf" : "fa-file-lines"} docIcon`}></i>
               <span className="docName" title={doc.fileName}>{doc.fileName}</span>
-              {doc.status === "processing" && <span className="docStatus processing"><i className="fa-solid fa-circle-notch fa-spin"></i> Indexing…</span>}
+              {(doc.status === "queued" || doc.status === "processing") && (
+                <span className="docStatus processing">
+                  <i className="fa-solid fa-circle-notch fa-spin"></i>{" "}
+                  {doc.stage || "Indexing"}
+                  {doc.status === "processing" && doc.progress > 0 && doc.progress < 100 ? ` ${doc.progress}%` : "…"}
+                </span>
+              )}
               {doc.status === "ready" && <span className="docStatus ready">{doc.chunkCount} chunks</span>}
               {doc.status === "failed" && <span className="docStatus failed" title={doc.error}>Failed</span>}
               <button className="docDelete" onClick={() => handleDelete(doc._id)} title="Remove" type="button">
@@ -160,7 +198,7 @@ function AttachMenu({ onPickImage, imageDisabled = false }) {
 
           <button className="docUploadBtn" onClick={handlePick} disabled={uploading} type="button">
             {uploading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-plus"></i>}
-            {uploading ? " Uploading & indexing…" : " Upload PDF / .txt / .md"}
+            {uploading ? " Uploading…" : " Upload PDF / .txt / .md"}
           </button>
           {error && <p className="docsError">{error}</p>}
         </div>
