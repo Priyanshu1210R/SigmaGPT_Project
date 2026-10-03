@@ -41,13 +41,17 @@ async function embedBatch(texts, taskType) {
 /**
  * Embed multiple document chunks (indexing time).
  * @param {string[]} texts
+ * @param {{ onProgress?: (done: number, total: number) => (void|Promise<void>) }} [opts]
+ *   onProgress fires after each batch — the background worker uses it to report
+ *   progress and to renew its job lease while a big document is still embedding.
  * @returns {Promise<number[][]>} one embedding vector per input text, same order
  */
-export async function embedChunks(texts) {
+export async function embedChunks(texts, { onProgress } = {}) {
   const batches = chunkArray(texts, BATCH_SIZE);
   const results = [];
   for (const batch of batches) {
     results.push(...(await embedBatch(batch, "RETRIEVAL_DOCUMENT")));
+    if (onProgress) await onProgress(results.length, texts.length);
   }
   return results;
 }
