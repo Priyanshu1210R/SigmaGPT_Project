@@ -10,9 +10,13 @@ const DocumentSchema = new mongoose.Schema({
   sizeBytes: { type: Number, required: true },
   status: {
     type: String,
-    enum: ["processing", "ready", "failed"],
-    default: "processing",
+    // queued = accepted, waiting for a worker; processing = a worker is on it.
+    enum: ["queued", "processing", "ready", "failed"],
+    default: "queued",
   },
+  // Human-readable progress for the polling endpoint / UI, e.g. "Reading file", "Embedding".
+  stage: { type: String, default: "Queued" },
+  progress: { type: Number, default: 0, min: 0, max: 100 }, // percent
   chunkCount: { type: Number, default: 0 },
   error: { type: String, default: null }, // populated when status === "failed"
   createdAt: { type: Date, default: Date.now },
