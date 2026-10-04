@@ -10,7 +10,7 @@ import { BACKEND } from "./config.js";
 const FREE_LIMIT = 20;
 
 function ChatWindow() {
-  const { prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat, image, setImage, streamingText, setStreamingText, isStreaming, setIsStreaming, streamingCitations, setStreamingCitations } = useContext(MyContext);
+  const { prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat, image, setImage, setStreamingText, setIsStreaming, streamingCitations, setStreamingCitations } = useContext(MyContext);
   const { token, user, setUser, logout, updateProfile, upgradeToPremium } = useAuth();
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
