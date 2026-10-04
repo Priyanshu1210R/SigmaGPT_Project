@@ -1,0 +1,49 @@
+# Local full stack:  docker compose up --build
+# Needs Backend/.env with JWT_SECRET and GEMINI_API_KEY (MONGODB_URL is set below).
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./Backend
+    env_file: ./Backend/.env
+    environment:
+      MONGODB_URL: mongodb://mongo:27017/sigmagpt
+      PORT: 8080
+      CORS_ORIGINS: http://localhost:5173
+      RUN_WORKER_IN_API: "false"   # worker runs as its own container below
+    ports:
+      - "8080:8080"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  worker:
+    build: ./Backend
+    command: ["node", "worker.js"]
+    env_file: ./Backend/.env
+    environment:
+      MONGODB_URL: mongodb://mongo:27017/sigmagpt
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./Frontend
+      args:
+        VITE_API_URL: http://localhost:8080
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
